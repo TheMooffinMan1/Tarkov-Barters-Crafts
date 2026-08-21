@@ -258,6 +258,95 @@
           "types": [],
           "buyFromTrader": [],
           "sellToTrader": []
+        },
+        "59faff1d86f7746c51718c9c": {
+          "id": "59faff1d86f7746c51718c9c",
+          "name": "Physical Bitcoin",
+          "shortName": "0.2BTC",
+          "basePrice": 100000,
+          "lastLowPrice": 0,
+          "avg24hPrice": 0,
+          "types": ["barter", "noFlea"],
+          "buyFromTrader": [],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 400000
+            },
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 200000
+            }
+          ]
+        },
+        "5d1b385e86f774252167b98a": {
+          "id": "5d1b385e86f774252167b98a",
+          "name": "Water filter",
+          "shortName": "WFilter",
+          "basePrice": 10000,
+          "lastLowPrice": 20000,
+          "avg24hPrice": 21000,
+          "types": ["barter"],
+          "properties": { "propertiesType": "ItemPropertiesResource", "units": 100 },
+          "buyFromTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 18000,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 8000
+            }
+          ]
+        },
+        "5d1b36a186f7742523398433": {
+          "id": "5d1b36a186f7742523398433",
+          "name": "Metal fuel tank",
+          "shortName": "Fuel",
+          "basePrice": 50000,
+          "lastLowPrice": 100000,
+          "avg24hPrice": 105000,
+          "types": ["barter"],
+          "properties": { "propertiesType": "ItemPropertiesResource", "units": 100 },
+          "buyFromTrader": [
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 90000,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": []
+        },
+        "5d1b371186f774253763a656": {
+          "id": "5d1b371186f774253763a656",
+          "name": "Expeditionary fuel tank",
+          "shortName": "Exp. fuel",
+          "basePrice": 40000,
+          "lastLowPrice": 70000,
+          "avg24hPrice": 72000,
+          "types": ["barter"],
+          "properties": { "propertiesType": "ItemPropertiesResource", "units": 60 },
+          "buyFromTrader": [],
+          "sellToTrader": []
+        },
+        "item-superwater": {
+          "id": "item-superwater",
+          "name": "Canister with purified water",
+          "shortName": "PWater",
+          "basePrice": 30000,
+          "lastLowPrice": 50000,
+          "avg24hPrice": 51000,
+          "types": ["provisions"],
+          "buyFromTrader": [],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 25000
+            }
+          ]
         }
       }
     }
@@ -325,6 +414,17 @@
         ],
         "requiredQuestItems": [],
         "productItem": { "item": "item-case", "count": 1, "attributes": {} }
+      },
+      {
+        "id": "craft-superwater",
+        "station": "station-workbench",
+        "level": 3,
+        "duration": 19500,
+        "taskUnlock": null,
+        "gameEditions": [],
+        "requiredItems": [{ "item": "5d1b385e86f774252167b98a", "count": 0.66, "attributes": {} }],
+        "requiredQuestItems": [],
+        "productItem": { "item": "item-superwater", "count": 1, "attributes": {} }
       }
     ]
   },

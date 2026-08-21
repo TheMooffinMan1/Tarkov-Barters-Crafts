@@ -13,6 +13,14 @@ export const INPUT_VALUES = [
   { id: "lowest", label: "Lowest anywhere" },
 ];
 
+export const FUEL_VALUES = [
+  { id: "flea", label: "Flea" },
+  { id: "trader", label: "Trader" },
+  { id: "barter", label: "Barter" },
+  { id: "cheapest", label: "Cheapest of flea / trader" },
+  { id: "lowest", label: "Lowest anywhere" },
+];
+
 export const OUTPUT_VALUES = [
   { id: "flea", label: "Flea" },
   { id: "trader", label: "Best trader sell" },
@@ -25,6 +33,11 @@ export const DEFAULT_SETTINGS = {
   useFleaAvg: false,
   includeFleaFee: true,
   countToolsAsCost: false,
+  includeFuelCost: false,
+  fuelValue: "cheapest",
+  solarPower: false,
+  subtractBitcoinProfit: false,
+  bitcoinGpus: 10,
   hideUnprofitable: true,
   hideUnpurchasable: true,
   hiddenQuestIds: [],

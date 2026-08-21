@@ -6,6 +6,15 @@ export function formatRoubles(value: number): string {
   return `${sign}${roubles.format(Math.abs(rounded))} ₽`;
 }
 
+/** Quantity for craft/barter lines (supports fractions like 0.66). */
+export function formatQty(value: number): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  if (Number.isInteger(n)) return String(n);
+  const rounded = Math.round(n * 1000) / 1000;
+  return String(rounded);
+}
+
 export function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
   const h = Math.floor(s / 3600);

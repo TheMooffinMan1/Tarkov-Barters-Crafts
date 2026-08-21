@@ -20,13 +20,19 @@ function blob() {
 
 test("drops bitcoin farm and unused catalogue items", () => {
   const out = blob();
-  assert.equal(out.crafts.map((c) => c.id).sort().join(","), "craft-docs,craft-glue,craft-sticky,craft-tooling");
+  assert.equal(
+    out.crafts.map((c) => c.id).sort().join(","),
+    "craft-docs,craft-glue,craft-sticky,craft-superwater,craft-tooling",
+  );
   assert.equal(out.barters.length, 2);
   assert.ok(!out.items["item-junk"]);
   assert.ok(!out.items["item-bitcoin"]);
   assert.ok(out.items["item-bolt"]);
   assert.ok(out.items["item-case"]);
   assert.ok(out.items["item-glue"]);
+  assert.ok(out.items["5d1b36a186f7742523398433"]);
+  assert.equal(out.items["5d1b385e86f774252167b98a"].consumable, "waterFilter");
+  assert.ok(out.items["59faff1d86f7746c51718c9c"]);
 });
 
 test("tools are flagged and not treated as extra product", () => {
@@ -48,7 +54,7 @@ test("unlock tasks are the referenced quests only", () => {
 
 test("cash-buy items become flips", () => {
   const out = blob();
-  assert.equal(out.flips.length, 8);
+  assert.equal(out.flips.length, 10);
   assert.ok(out.flips.some((flip) => flip.traderId === "trader-prapor" && flip.buyPriceRUB === 700));
   assert.equal(out.items["item-gun"].usesDurability, true);
   assert.equal(out.items["item-key"].usesDurability, true);

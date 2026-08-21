@@ -2,6 +2,7 @@ declare module "@compute/index.mjs" {
   export const DEFAULT_SETTINGS: Settings;
   export const GAME_MODES: { id: string; label: string }[];
   export const INPUT_VALUES: { id: string; label: string }[];
+  export const FUEL_VALUES: { id: string; label: string }[];
   export const OUTPUT_VALUES: { id: string; label: string }[];
   export function settingsStorageKey(mode?: string): string;
   export function valuate(
@@ -32,6 +33,11 @@ declare module "@compute/index.mjs" {
     useFleaAvg: boolean;
     includeFleaFee: boolean;
     countToolsAsCost: boolean;
+    includeFuelCost: boolean;
+    fuelValue: string;
+    solarPower: boolean;
+    subtractBitcoinProfit: boolean;
+    bitcoinGpus: number;
     hideUnprofitable: boolean;
     hideUnpurchasable: boolean;
     hiddenQuestIds: string[];
@@ -94,6 +100,7 @@ declare module "@compute/index.mjs" {
     id: string;
     count: number;
     tool: boolean;
+    fuel?: boolean;
     name: string;
     shortName: string;
     iconLink?: string;

@@ -1,6 +1,14 @@
 import { fleaMarketFee } from "./flea-fee.mjs";
 import { DEFAULT_SETTINGS } from "./settings.mjs";
-import { MIN_CRAFT_SECONDS, CRAFTING_REDUCTION_PER_LEVEL } from "./util.mjs";
+import {
+  MIN_CRAFT_SECONDS,
+  CRAFTING_REDUCTION_PER_LEVEL,
+  FUEL_SECONDS_PER_UNIT,
+  FUEL_ITEM_IDS,
+  PHYSICAL_BITCOIN_ID,
+  hideoutConsumptionMultiplier,
+  bitcoinPerHour,
+} from "./util.mjs";
 import { canUseFlea } from "./progress.mjs";
 
 function itemOf(blob, id) {
@@ -135,8 +143,10 @@ function cheapestRecipe(itemId, kind, ctx) {
     let sum = 0;
     for (const input of recipe.inputs || []) {
       if (input.tool && !ctx.settings.countToolsAsCost) continue;
+      const item = itemOf(ctx.blob, input.id);
+      const qty = effectiveInputCount(input, item, ctx.settings);
       const inner = unitCost(input.id, ctx);
-      sum += inner.price * input.count;
+      sum += inner.price * qty;
     }
     const count = recipe.output?.count || 1;
     const per = count ? sum / count : sum;
@@ -145,14 +155,24 @@ function cheapestRecipe(itemId, kind, ctx) {
   return best;
 }
 
-function unitCost(id, ctx) {
-  if (ctx.memo.has(id)) return ctx.memo.get(id);
+function effectiveInputCount(input, item, settings) {
+  const base = Number(input.count) || 0;
+  if (!item?.consumable) return base;
+  if (item.consumable === "waterFilter" || item.consumable === "airFilter" || item.consumable === "fuel") {
+    return base * hideoutConsumptionMultiplier(settings.hideoutManagement);
+  }
+  return base;
+}
+
+function unitCost(id, ctx, valueMode = ctx.settings.inputValue) {
+  const memoKey = `${id}::${valueMode}`;
+  if (ctx.memo.has(memoKey)) return ctx.memo.get(memoKey);
   if (ctx.stack.has(id)) return { price: 0, source: "none" };
 
   const item = itemOf(ctx.blob, id);
   const flea = fleaBuyPrice(item, ctx.settings, ctx.blob);
   const trader = traderBuyPrice(item, ctx.settings);
-  const mode = ctx.settings.inputValue;
+  const mode = valueMode;
   const needsProduction =
     mode === "craft" ||
     mode === "barter" ||
@@ -230,7 +250,7 @@ function unitCost(id, ctx) {
       }
   }
 
-  ctx.memo.set(id, result);
+  ctx.memo.set(memoKey, result);
   return result;
 }
 
@@ -259,13 +279,15 @@ function costLines(inputs, ctx) {
   for (const input of inputs) {
     const item = itemOf(ctx.blob, input.id);
     const priced = unitCost(input.id, ctx);
+    const qty = effectiveInputCount(input, item, ctx.settings);
     const skipCost = input.tool && !ctx.settings.countToolsAsCost;
-    const lineCost = skipCost ? 0 : priced.price * input.count;
+    const lineCost = skipCost ? 0 : priced.price * qty;
     total += lineCost;
     lines.push({
       id: input.id,
-      count: input.count,
+      count: qty,
       tool: Boolean(input.tool),
+      fuel: false,
       name: item?.name || input.id,
       shortName: item?.shortName || input.id,
       iconLink: item?.iconLink,
@@ -275,6 +297,61 @@ function costLines(inputs, ctx) {
     });
   }
   return { lines, total };
+}
+
+function craftFuelLine(durationSeconds, ctx) {
+  if (!ctx.settings.includeFuelCost) return null;
+  const rate = hideoutConsumptionMultiplier(ctx.settings.hideoutManagement);
+  const solar = ctx.settings.solarPower ? 2 : 1;
+  const secondsPerUnit = (FUEL_SECONDS_PER_UNIT * solar) / rate;
+  if (secondsPerUnit <= 0) return null;
+  const unitsNeeded = durationSeconds / secondsPerUnit;
+  const fuelMode = ctx.settings.fuelValue || "cheapest";
+
+  let best = null;
+  for (const id of FUEL_ITEM_IDS) {
+    const item = itemOf(ctx.blob, id);
+    if (!item) continue;
+    const priced = unitCost(id, ctx, fuelMode);
+    if (priced.price <= 0) continue;
+    const tankUnits = Number(item.resourceUnits) || 100;
+    const cost = (priced.price / tankUnits) * unitsNeeded;
+    if (!best || cost < best.cost) {
+      best = {
+        id,
+        count: unitsNeeded / tankUnits,
+        tool: false,
+        fuel: true,
+        name: item.name || id,
+        shortName: item.shortName || id,
+        iconLink: item.iconLink,
+        unit: priced.price,
+        source: priced.source,
+        cost,
+      };
+    }
+  }
+  return best;
+}
+
+/** Therapist (best trader) sell for Physical Bitcoin — flea is never used. */
+function bitcoinSellRub(blob) {
+  const item = itemOf(blob, PHYSICAL_BITCOIN_ID);
+  if (!item) return 0;
+  let best = 0;
+  for (const offer of item.sellToTrader || []) {
+    if (offer.priceRUB > best) best = offer.priceRUB;
+  }
+  return best;
+}
+
+function bitcoinIncomePerHour(blob, settings) {
+  if (!settings.subtractBitcoinProfit) return 0;
+  const gpus = Number(settings.bitcoinGpus) || 0;
+  if (gpus < 1) return 0;
+  const sell = bitcoinSellRub(blob);
+  if (sell <= 0) return 0;
+  return bitcoinPerHour(gpus) * sell;
 }
 
 function outputSale(item, settings, blob, count, excludeTraderId) {
@@ -494,6 +571,7 @@ export function valuate(blob, userSettings = {}, parts = {}) {
   const wantBarters = parts.barters !== false;
   const wantFlips = parts.flips !== false;
   const ctx = wantCrafts || wantBarters ? makeCostContext(blob, settings) : null;
+  const btcPerHour = wantCrafts ? bitcoinIncomePerHour(blob, settings) : 0;
 
   const crafts = [];
   if (wantCrafts) {
@@ -505,12 +583,18 @@ export function valuate(blob, userSettings = {}, parts = {}) {
     const outputItem = itemOf(blob, craft.output.id);
     const { lines, total } = costLines(craft.inputs, ctx);
     const duration = craftDuration(craft.duration, settings);
+    const fuelLine = craftFuelLine(duration, ctx);
+    if (fuelLine) {
+      lines.push(fuelLine);
+    }
+    const cost = total + (fuelLine?.cost || 0);
     const effectiveDuration = settings.dualCraft && settings.craftingSkill >= 51 ? duration / 2 : duration;
     const sale = outputSale(outputItem, settings, blob, craft.output.count);
     if (!canSell(sale)) continue;
-    const profit = sale.net - total;
     const hours = effectiveDuration / 3600;
-    const profitPerHour = hours > 0 ? Math.floor(profit / hours) : 0;
+    const btcOpportunity = btcPerHour * (duration / 3600);
+    const profit = sale.net - cost - btcOpportunity;
+    const profitPerHour = hours > 0 ? Math.floor((sale.net - cost) / hours - btcPerHour) : 0;
     const station = blob.meta.stations[craft.stationId];
 
     crafts.push({
@@ -522,7 +606,7 @@ export function valuate(blob, userSettings = {}, parts = {}) {
       taskUnlock: craft.taskUnlock,
       duration,
       costItems: lines,
-      cost: total,
+      cost,
       reward: rewardFrom(outputItem, craft.output, sale),
       profit,
       profitPerHour,

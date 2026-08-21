@@ -7,6 +7,9 @@ import {
   unique,
   isTool,
   titleCaseNormalized,
+  consumableKind,
+  FUEL_ITEM_IDS,
+  PHYSICAL_BITCOIN_ID,
 } from "./util.mjs";
 
 function contained(entry) {
@@ -36,6 +39,9 @@ function slimItem(raw, locale = {}) {
   if (!id) return null;
   const types = Array.isArray(raw.types) ? raw.types : [];
   const name = (locale[raw.name] ?? raw.name) || id;
+  const props = raw.properties || {};
+  const units = Number(props.units ?? props.maxResource) || 0;
+  const kind = consumableKind(id);
   return {
     id,
     name,
@@ -47,6 +53,8 @@ function slimItem(raw, locale = {}) {
     noFlea: types.includes("noFlea") || raw.noFlea === true,
     usesDurability: itemUsesDurability(raw, types),
     minLevelForFlea: Number(raw.minLevelForFlea) || 0,
+    consumable: kind,
+    resourceUnits: kind ? units || 100 : 0,
     buyFromTrader: slimOffers(raw.buyFromTrader),
     sellToTrader: slimOffers(raw.sellToTrader),
   };
@@ -224,7 +232,8 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
 
   for (const [id, raw] of Object.entries(rawItems)) {
     const hasCashBuy = asArray(raw?.buyFromTrader).some((o) => Number(o.priceRUB ?? o.price) > 0);
-    if (!recipeIds.has(id) && !hasCashBuy) continue;
+    const forceKeep = FUEL_ITEM_IDS.includes(id) || Boolean(consumableKind(id)) || id === PHYSICAL_BITCOIN_ID;
+    if (!recipeIds.has(id) && !hasCashBuy && !forceKeep) continue;
     const slim = slimItem(raw, locale);
     if (slim) itemMap[id] = slim;
   }

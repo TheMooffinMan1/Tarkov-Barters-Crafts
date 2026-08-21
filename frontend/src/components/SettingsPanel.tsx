@@ -1,5 +1,5 @@
 import type { ProfitBlob, Settings } from "@compute/index.mjs";
-import { INPUT_VALUES, OUTPUT_VALUES, traderLevelsForPlayer, loyaltyForPlayerLevel } from "@compute/index.mjs";
+import { FUEL_VALUES, INPUT_VALUES, OUTPUT_VALUES, traderLevelsForPlayer, loyaltyForPlayerLevel } from "@compute/index.mjs";
 import { taskLoyalty, withQuestLlSync } from "../lib/quests";
 
 type Props = {
@@ -151,6 +151,56 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
         <label className="check">
           <input
             type="checkbox"
+            checked={settings.includeFuelCost}
+            onChange={(e) => patch({ includeFuelCost: e.target.checked })}
+          />
+          Add generator fuel cost to crafts
+        </label>
+        {settings.includeFuelCost ? (
+          <>
+            <label>
+              Fuel price
+              <select value={settings.fuelValue} onChange={(e) => patch({ fuelValue: e.target.value })}>
+                {FUEL_VALUES.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.solarPower)}
+                onChange={(e) => patch({ solarPower: e.target.checked })}
+              />
+              Solar Power (−50% fuel use)
+            </label>
+          </>
+        ) : null}
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={Boolean(settings.subtractBitcoinProfit)}
+            onChange={(e) => patch({ subtractBitcoinProfit: e.target.checked })}
+          />
+          Subtract bitcoin farm profits from crafts
+        </label>
+        {settings.subtractBitcoinProfit ? (
+          <label>
+            Graphics cards ({settings.bitcoinGpus})
+            <input
+              type="range"
+              min={1}
+              max={50}
+              value={settings.bitcoinGpus || 1}
+              onChange={(e) => patch({ bitcoinGpus: Number(e.target.value) })}
+            />
+          </label>
+        ) : null}
+        <label className="check">
+          <input
+            type="checkbox"
             checked={settings.hideUnprofitable}
             onChange={(e) => patch({ hideUnprofitable: e.target.checked })}
           />
@@ -223,6 +273,7 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
             onChange={(e) => patch({ hideoutManagement: Number(e.target.value) })}
           />
         </label>
+        <p className="hint">Reduces fuel and water/air filter use (−0.5%/level). With Intel 3, also cuts flea fees.</p>
         <label>
           Intelligence Center
           <select

@@ -1,4 +1,4 @@
-import { formatRoubles } from "../lib/format";
+import { formatQty, formatRoubles } from "../lib/format";
 
 type Props = {
   name: string;
@@ -45,7 +45,7 @@ export function ItemStack({ name, shortName, iconLink, count = 1, subtitle, tool
       )}
       <div className="item-copy">
         <div className="item-name">
-          {count > 1 ? <span className="qty">×{count}</span> : null}
+          <span className="qty">×{formatQty(count)}</span>
           {name}
           {tool ? <ToolIcon /> : null}
         </div>

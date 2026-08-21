@@ -170,3 +170,64 @@ test("unsellable outputs are omitted", () => {
   const { crafts } = valuate(built, DEFAULT_SETTINGS);
   assert.equal(crafts.some((row) => row.id === "craft-glue"), false);
 });
+
+test("water filter crafts use fractional count and Hideout Management reduces consumption", () => {
+  const base = valuate(built, { ...DEFAULT_SETTINGS, hideoutManagement: 0, includeFuelCost: false }).crafts.find(
+    (row) => row.id === "craft-superwater",
+  );
+  const elite = valuate(built, { ...DEFAULT_SETTINGS, hideoutManagement: 50, includeFuelCost: false }).crafts.find(
+    (row) => row.id === "craft-superwater",
+  );
+  const filter = base.costItems.find((line) => line.id === "5d1b385e86f774252167b98a");
+  const filterElite = elite.costItems.find((line) => line.id === "5d1b385e86f774252167b98a");
+  assert.equal(filter.count, 0.66);
+  assert.equal(filter.unit, 18000);
+  assert.equal(filter.cost, 18000 * 0.66);
+  assert.equal(filterElite.count, 0.66 * 0.75);
+  assert.equal(filterElite.cost, 18000 * 0.66 * 0.75);
+});
+
+test("optional fuel cost uses cheapest tank and respects solar / HM", () => {
+  const off = valuate(built, { ...DEFAULT_SETTINGS, includeFuelCost: false }).crafts.find((row) => row.id === "craft-docs");
+  const on = valuate(built, {
+    ...DEFAULT_SETTINGS,
+    includeFuelCost: true,
+    fuelValue: "cheapest",
+    solarPower: false,
+    hideoutManagement: 0,
+  }).crafts.find((row) => row.id === "craft-docs");
+  const solar = valuate(built, {
+    ...DEFAULT_SETTINGS,
+    includeFuelCost: true,
+    fuelValue: "cheapest",
+    solarPower: true,
+    hideoutManagement: 0,
+  }).crafts.find((row) => row.id === "craft-docs");
+
+  assert.equal(off.costItems.some((line) => line.fuel), false);
+  const fuel = on.costItems.find((line) => line.fuel);
+  assert.ok(fuel);
+  assert.ok(fuel.cost > 0);
+  assert.ok(on.cost > off.cost);
+  const fuelSolar = solar.costItems.find((line) => line.fuel);
+  assert.ok(Math.abs(fuelSolar.cost - fuel.cost / 2) < 0.01);
+});
+
+test("subtract bitcoin farm income from craft profit using Therapist sell", () => {
+  const plain = valuate(built, {
+    ...DEFAULT_SETTINGS,
+    includeFuelCost: false,
+    subtractBitcoinProfit: false,
+  }).crafts.find((row) => row.id === "craft-docs");
+  const withBtc = valuate(built, {
+    ...DEFAULT_SETTINGS,
+    includeFuelCost: false,
+    subtractBitcoinProfit: true,
+    bitcoinGpus: 1,
+  }).crafts.find((row) => row.id === "craft-docs");
+  // 1 GPU: 300000s/coin → 3600/300000 BTC/h → * 400000 Therapist
+  const btcPerHour = (3600 / 300000) * 400000;
+  assert.ok(Math.abs(plain.profit - withBtc.profit - btcPerHour * (plain.duration / 3600)) < 1);
+  assert.ok(withBtc.profit < plain.profit);
+  assert.ok(withBtc.profitPerHour < plain.profitPerHour);
+});

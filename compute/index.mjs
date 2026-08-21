@@ -6,6 +6,7 @@ export {
   DEFAULT_SETTINGS,
   GAME_MODES,
   INPUT_VALUES,
+  FUEL_VALUES,
   OUTPUT_VALUES,
   settingsStorageKey,
 } from "./settings.mjs";
