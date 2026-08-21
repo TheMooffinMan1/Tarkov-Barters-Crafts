@@ -8,8 +8,8 @@ crons = ["*/15 * * * *"]
 # Replace with `wrangler kv namespace create PROFIT_KV` output.
 [[kv_namespaces]]
 binding = "PROFIT_KV"
-id = "REPLACE_ME_KV_NAMESPACE_ID"
+id = "71d486f57c08492ca86df760dca18ce8"
 
 [vars]
-GITHUB_REPO = "REPLACE_ME_OWNER/REPLACE_ME_REPO"
+GITHUB_REPO = "TheMooffinMan1/Tarkov-Barters-Crafts"
 UPSTREAM_BASE = "https://json.tarkov.dev"
