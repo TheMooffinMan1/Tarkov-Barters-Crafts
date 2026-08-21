@@ -52,7 +52,6 @@ function groupQuests(blob: ProfitBlob) {
 }
 
 export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
-  const stations = Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name));
   const traders = Object.values(blob.meta.traders)
     .filter(
       (trader) =>
@@ -258,47 +257,6 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
           />
           I have required quest items
         </label>
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={settings.filterToProgress}
-            onChange={(e) => {
-              const on = e.target.checked;
-              if (!on) {
-                patch({ filterToProgress: false });
-                return;
-              }
-              const previousTraderLevels = settings.traderLevels;
-              const traderLevels = traderLevelsForPlayer(blob.meta.traders, settings.playerLevel);
-              onChange(
-                withQuestLlSync(
-                  { ...settings, filterToProgress: true, traderLevels },
-                  blob,
-                  { previousTraderLevels, enableNewlyUnlocked: true },
-                ),
-              );
-            }}
-          />
-          Only show what my level / hideout / traders can access
-        </label>
-        {settings.filterToProgress
-          ? stations.map((station) => (
-              <label key={station.id}>
-                {station.name} ({settings.stationLevels[station.id] ?? station.maxLevel})
-                <input
-                  type="range"
-                  min={0}
-                  max={station.maxLevel}
-                  value={settings.stationLevels[station.id] ?? station.maxLevel}
-                  onChange={(e) =>
-                    patch({
-                      stationLevels: { ...settings.stationLevels, [station.id]: Number(e.target.value) },
-                    })
-                  }
-                />
-              </label>
-            ))
-          : null}
       </section>
 
       <section>

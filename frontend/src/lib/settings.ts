@@ -43,6 +43,7 @@ function normalizeSettings(parsed: Partial<Settings>): Settings {
     ...parsed,
     inputValue,
     useFleaAvg,
+    filterToProgress: false,
     hiddenQuestIds: staleLl ? [] : (parsed.hiddenQuestIds ?? []),
     stationLevels: parsed.stationLevels ?? {},
     traderLevels: staleLl ? {} : (parsed.traderLevels ?? {}),

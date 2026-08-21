@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   DEFAULT_SETTINGS,
   GAME_MODES,
@@ -23,12 +23,29 @@ function topCraftsPerStation(crafts: ValuatedRow[], limit = 2): ValuatedRow[] {
     if (!byStation.has(key)) byStation.set(key, []);
     byStation.get(key)!.push(row);
   }
-  const out: ValuatedRow[] = [];
-  for (const rows of byStation.values()) {
-    rows.sort((a, b) => b.profit - a.profit);
-    out.push(...rows.slice(0, limit));
-  }
-  return out;
+  const groups = [...byStation.values()].map((rows) => {
+    const sorted = [...rows].sort((a, b) => b.profit - a.profit).slice(0, limit);
+    return sorted;
+  });
+  groups.sort((a, b) => {
+    const nameA = a[0]?.stationName || "";
+    const nameB = b[0]?.stationName || "";
+    return nameA.localeCompare(nameB);
+  });
+  return groups.flat();
+}
+
+function resetProgressForMode(settings: Settings): Settings {
+  return {
+    ...settings,
+    playerLevel: DEFAULT_SETTINGS.playerLevel,
+    traderLevels: {},
+    stationLevels: {},
+    hiddenQuestIds: [],
+    filterToProgress: DEFAULT_SETTINGS.filterToProgress,
+    haveQuestItems: DEFAULT_SETTINGS.haveQuestItems,
+    gameEdition: DEFAULT_SETTINGS.gameEdition,
+  };
 }
 
 function hydrate(settings: Settings, blob: ProfitBlob): Settings {
@@ -66,14 +83,17 @@ export function App() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [resetNonce, setResetNonce] = useState(0);
+  const modeRef = useRef(mode);
 
   useEffect(() => {
+    const modeChanged = modeRef.current !== mode;
+    modeRef.current = mode;
     setLoading(true);
     setError(null);
     loadBlob(mode)
       .then((data) => {
         setBlob(data);
-        setSettings((current) => hydrate(current, data));
+        setSettings((current) => hydrate(modeChanged ? resetProgressForMode(current) : current, data));
         setStationChip((chip) => (chip && data.meta.stations[chip] ? chip : ""));
         setTraderChip((chip) => (chip && data.meta.traders[chip] ? chip : ""));
       })
@@ -347,6 +367,7 @@ export function App() {
               search={search}
               hideUnprofitable={settings.hideUnprofitable}
               onHideQuest={hideQuest}
+              groupByStation={Boolean(settings.bestTwoCraftsPerStation)}
             />
           ) : null}
           {tab === "barters" ? (

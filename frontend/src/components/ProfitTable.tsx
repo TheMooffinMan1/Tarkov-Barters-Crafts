@@ -11,6 +11,7 @@ type Props = {
   search: string;
   hideUnprofitable: boolean;
   onHideQuest?: (taskId: string) => void;
+  groupByStation?: boolean;
 };
 
 type SortKey = "profit" | "profitPerHour" | "cost" | "duration" | "name";
@@ -18,7 +19,14 @@ type SortKey = "profit" | "profitPerHour" | "cost" | "duration" | "name";
 const FLIP_ROW_PX = 76;
 const FLIP_OVERSCAN = 10;
 
-export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest }: Props) {
+function rowSortDelta(a: ValuatedRow, b: ValuatedRow, sortKey: SortKey) {
+  if (sortKey === "name") return a.reward.name.localeCompare(b.reward.name);
+  if (sortKey === "duration") return (a.duration ?? 0) - (b.duration ?? 0);
+  if (sortKey === "profitPerHour") return (a.profitPerHour ?? 0) - (b.profitPerHour ?? 0);
+  return (a[sortKey] as number) - (b[sortKey] as number);
+}
+
+export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest, groupByStation }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("profit");
   const [desc, setDesc] = useState(true);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -35,17 +43,34 @@ export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest 
   }, [rows, search, hideUnprofitable]);
 
   const sorted = useMemo(() => {
+    if (groupByStation) {
+      const byStation = new Map<string, ValuatedRow[]>();
+      for (const row of filtered) {
+        const key = row.stationId || "";
+        if (!byStation.has(key)) byStation.set(key, []);
+        byStation.get(key)!.push(row);
+      }
+      const groups = [...byStation.values()].map((group) => {
+        const copy = [...group];
+        copy.sort((a, b) => {
+          const delta = rowSortDelta(a, b, sortKey);
+          return desc ? -delta : delta;
+        });
+        return copy;
+      });
+      groups.sort((a, b) => {
+        const delta = rowSortDelta(a[0], b[0], sortKey);
+        return desc ? -delta : delta;
+      });
+      return groups.flat();
+    }
     const copy = [...filtered];
     copy.sort((a, b) => {
-      let delta = 0;
-      if (sortKey === "name") delta = a.reward.name.localeCompare(b.reward.name);
-      else if (sortKey === "duration") delta = (a.duration ?? 0) - (b.duration ?? 0);
-      else if (sortKey === "profitPerHour") delta = (a.profitPerHour ?? 0) - (b.profitPerHour ?? 0);
-      else delta = (a[sortKey] as number) - (b[sortKey] as number);
+      const delta = rowSortDelta(a, b, sortKey);
       return desc ? -delta : delta;
     });
     return copy;
-  }, [filtered, sortKey, desc]);
+  }, [filtered, sortKey, desc, groupByStation]);
 
   const isFlip = kind === "flips";
   const virtualize = isFlip && sorted.length > 60;
@@ -138,15 +163,24 @@ export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest 
               <td colSpan={emptyCols} style={{ height: start * FLIP_ROW_PX, padding: 0, border: 0 }} />
             </tr>
           ) : null}
-          {visible.map((row) => (
-            <tr key={row.id} className={isFlip ? "flip-row" : undefined}>
+          {visible.map((row, index) => {
+            const absoluteIndex = start + index;
+            const stationBreak =
+              groupByStation &&
+              absoluteIndex > 0 &&
+              sorted[absoluteIndex - 1]?.stationId !== row.stationId;
+            return (
+            <tr
+              key={row.id}
+              className={[isFlip ? "flip-row" : "", stationBreak ? "station-break" : ""].filter(Boolean).join(" ") || undefined}
+            >
               <td>
                 <ItemStack
                   name={row.reward.name}
                   shortName={row.reward.shortName}
                   iconLink={row.reward.iconLink}
                   count={row.reward.count}
-                  price={isFlip ? null : row.reward.net}
+                  price={isFlip ? null : row.reward.gross * row.reward.count}
                   source={isFlip ? undefined : row.reward.sellSource}
                   subtitle={
                     isFlip
@@ -169,7 +203,7 @@ export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest 
                   </td>
                   <td>
                     <div className="item-sub">
-                      <span className="item-price">{formatRoubles(row.reward.net)}</span>
+                      <span className="item-price">{formatRoubles(row.reward.gross * row.reward.count)}</span>
                       <span className="item-source">{row.reward.sellSource === "flea" ? "Flea" : "Trader"}</span>
                     </div>
                   </td>
@@ -184,6 +218,7 @@ export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest 
                         iconLink={line.iconLink}
                         count={line.count}
                         tool={line.tool}
+                        asInput
                         price={line.cost > 0 ? line.cost : line.unit}
                         source={line.source}
                       />
@@ -239,7 +274,8 @@ export function ProfitTable({ kind, rows, search, hideUnprofitable, onHideQuest 
                 </td>
               ) : null}
             </tr>
-          ))}
+            );
+          })}
           {virtualize && end < sorted.length ? (
             <tr className="virtual-pad" aria-hidden="true">
               <td colSpan={emptyCols} style={{ height: (sorted.length - end) * FLIP_ROW_PX, padding: 0, border: 0 }} />

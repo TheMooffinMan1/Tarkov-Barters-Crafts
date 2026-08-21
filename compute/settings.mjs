@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS = {
   schema: 2,
   craftingSkill: 0,
   hideoutManagement: 0,
-  intelligenceCenter: 3,
+  intelligenceCenter: 0,
   dualCraft: false,
   gameEdition: "",
   flipDirection: "traderToFlea",

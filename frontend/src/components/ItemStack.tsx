@@ -9,6 +9,8 @@ type Props = {
   tool?: boolean;
   price?: number | null;
   source?: string;
+  /** When true, 0 / no-source prices show "Cannot be bought" instead of 0 ₽. */
+  asInput?: boolean;
 };
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -19,8 +21,9 @@ const SOURCE_LABEL: Record<string, string> = {
   none: "No price",
 };
 
-export function ItemStack({ name, shortName, iconLink, count = 1, subtitle, tool, price, source }: Props) {
-  const sourceLabel = source ? SOURCE_LABEL[source] || source : "";
+export function ItemStack({ name, shortName, iconLink, count = 1, subtitle, tool, price, source, asInput }: Props) {
+  const unbuyable = Boolean(asInput && (source === "none" || price === 0));
+  const sourceLabel = !unbuyable && source && source !== "none" ? SOURCE_LABEL[source] || source : "";
   return (
     <div className={`item-stack ${tool ? "is-tool" : ""}`}>
       {iconLink ? (
@@ -46,10 +49,16 @@ export function ItemStack({ name, shortName, iconLink, count = 1, subtitle, tool
           {name}
           {tool ? <ToolIcon /> : null}
         </div>
-        {price != null || sourceLabel || subtitle ? (
+        {price != null || sourceLabel || subtitle || unbuyable ? (
           <div className="item-sub">
-            {price != null ? <span className="item-price">{formatRoubles(price)}</span> : null}
-            {sourceLabel ? <span className="item-source">{sourceLabel}</span> : null}
+            {unbuyable ? (
+              <span className="item-unbuyable">Cannot be bought</span>
+            ) : (
+              <>
+                {price != null ? <span className="item-price">{formatRoubles(price)}</span> : null}
+                {sourceLabel ? <span className="item-source">{sourceLabel}</span> : null}
+              </>
+            )}
             {subtitle}
           </div>
         ) : null}

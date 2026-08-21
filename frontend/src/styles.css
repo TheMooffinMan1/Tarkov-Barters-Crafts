@@ -234,6 +234,9 @@ h1 { margin: 0; font-size: 34px; font-weight: 650; letter-spacing: -0.03em; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 14px 16px; border-top: 1px solid var(--line); vertical-align: middle; text-align: left; }
 th { position: sticky; top: 0; background: #1a2229; z-index: 1; }
+tr.station-break td {
+  border-top: 3px solid var(--gold-dim);
+}
 .th-btn { border-radius: 6px; padding: 6px 10px; font-weight: 600; white-space: nowrap; }
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .nowrap { white-space: nowrap; }
@@ -337,6 +340,7 @@ th { position: sticky; top: 0; background: #1a2229; z-index: 1; }
 .item-sub { color: var(--muted); font-size: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
 .item-price { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 650; }
 .item-source { color: var(--gold); }
+.item-unbuyable { color: var(--muted); font-style: italic; }
 .qty { color: var(--gold); }
 .tool-icon {
   color: #8ec8e6;
