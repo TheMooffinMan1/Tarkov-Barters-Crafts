@@ -1,5 +1,6 @@
 import type { ProfitBlob, Settings } from "@compute/index.mjs";
 import { INPUT_VALUES, OUTPUT_VALUES, traderLevelsForPlayer, loyaltyForPlayerLevel } from "@compute/index.mjs";
+import { taskLoyalty, withQuestLlSync } from "../lib/quests";
 
 type Props = {
   blob: ProfitBlob;
@@ -23,18 +24,6 @@ function applyIds(list: string[], ids: string[], hide: boolean) {
 }
 
 type Task = ProfitBlob["unlockTasks"][number];
-
-function taskLoyalty(task: Task, blob: ProfitBlob) {
-  if (task.traderLevel) return task.traderLevel;
-  let min = Infinity;
-  for (const row of blob.barters) {
-    if (row.taskUnlock === task.id) min = Math.min(min, row.minTraderLevel || 1);
-  }
-  for (const row of blob.flips) {
-    if (row.taskUnlock === task.id) min = Math.min(min, row.minTraderLevel || 1);
-  }
-  return Number.isFinite(min) ? min : 1;
-}
 
 function groupQuests(blob: ProfitBlob) {
   const buckets = new Map<string, { traderId: string; traderName: string; tasks: Task[] }>();
@@ -75,10 +64,27 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
   const questGroups = groupQuests(blob);
 
   function setPlayerLevel(playerLevel: number) {
-    patch({
-      playerLevel,
-      traderLevels: traderLevelsForPlayer(blob.meta.traders, playerLevel),
-    });
+    const previousTraderLevels = settings.traderLevels;
+    const traderLevels = traderLevelsForPlayer(blob.meta.traders, playerLevel);
+    onChange(
+      withQuestLlSync(
+        { ...settings, playerLevel, traderLevels },
+        blob,
+        { previousTraderLevels, enableNewlyUnlocked: true },
+      ),
+    );
+  }
+
+  function setTraderLevel(traderId: string, level: number) {
+    const previousTraderLevels = settings.traderLevels;
+    const traderLevels = { ...settings.traderLevels, [traderId]: level };
+    onChange(
+      withQuestLlSync(
+        { ...settings, traderLevels },
+        blob,
+        { previousTraderLevels, enableNewlyUnlocked: true },
+      ),
+    );
   }
 
   function setCraftingSkill(craftingSkill: number) {
@@ -159,9 +165,6 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
           />
           Hide crafts and barters that consume items you cannot buy
         </label>
-        <p className="hint">
-          Off: those inputs are priced from the cheapest craft or barter. Returned tools never hide a recipe.
-        </p>
       </section>
 
       <section>
@@ -184,11 +187,7 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
               min={0}
               max={4}
               value={settings.traderLevels[trader.id] ?? loyaltyForPlayerLevel(trader, settings.playerLevel)}
-              onChange={(e) =>
-                patch({
-                  traderLevels: { ...settings.traderLevels, [trader.id]: Number(e.target.value) },
-                })
-              }
+              onChange={(e) => setTraderLevel(trader.id, Number(e.target.value))}
             />
           </label>
         ))}
@@ -265,10 +264,19 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
             checked={settings.filterToProgress}
             onChange={(e) => {
               const on = e.target.checked;
-              patch({
-                filterToProgress: on,
-                ...(on ? { traderLevels: traderLevelsForPlayer(blob.meta.traders, settings.playerLevel) } : {}),
-              });
+              if (!on) {
+                patch({ filterToProgress: false });
+                return;
+              }
+              const previousTraderLevels = settings.traderLevels;
+              const traderLevels = traderLevelsForPlayer(blob.meta.traders, settings.playerLevel);
+              onChange(
+                withQuestLlSync(
+                  { ...settings, filterToProgress: true, traderLevels },
+                  blob,
+                  { previousTraderLevels, enableNewlyUnlocked: true },
+                ),
+              );
             }}
           />
           Only show what my level / hideout / traders can access
@@ -295,7 +303,7 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
 
       <section>
         <h2>Quest-locked recipes</h2>
-        <p className="hint">Checked = on. Tick LL to toggle that whole band.</p>
+        <p className="hint">Checked = on. Quests above your unlocked trader LL start off.</p>
         {questGroups.length === 0 ? <p className="muted">No quest-gated recipes in this dump.</p> : null}
         {questGroups.map((group) => (
           <div key={group.traderId} className="quest-group">

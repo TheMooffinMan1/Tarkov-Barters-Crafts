@@ -6,15 +6,30 @@ import {
   loyaltyForPlayerLevel,
   type ProfitBlob,
   type Settings,
+  type ValuatedRow,
 } from "@compute/index.mjs";
 import { loadBlob } from "./lib/api";
-import { loadSettings, saveSettings } from "./lib/settings";
+import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
+import { withQuestLlSync } from "./lib/quests";
 import { formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
 
-type Tab = "crafts" | "barters" | "flips";
+function topCraftsPerStation(crafts: ValuatedRow[], limit = 2): ValuatedRow[] {
+  const byStation = new Map<string, ValuatedRow[]>();
+  for (const row of crafts) {
+    const key = row.stationId || "";
+    if (!byStation.has(key)) byStation.set(key, []);
+    byStation.get(key)!.push(row);
+  }
+  const out: ValuatedRow[] = [];
+  for (const rows of byStation.values()) {
+    rows.sort((a, b) => b.profit - a.profit);
+    out.push(...rows.slice(0, limit));
+  }
+  return out;
+}
 
 function hydrate(settings: Settings, blob: ProfitBlob): Settings {
   const stationLevels = { ...settings.stationLevels };
@@ -27,38 +42,40 @@ function hydrate(settings: Settings, blob: ProfitBlob): Settings {
       traderLevels[trader.id] = loyaltyForPlayerLevel(trader, settings.playerLevel);
     }
   }
-  return {
-    ...settings,
-    stationLevels,
-    traderLevels,
-    dualCraft: settings.craftingSkill >= 51 ? settings.dualCraft : false,
-  };
+  return withQuestLlSync(
+    {
+      ...settings,
+      stationLevels,
+      traderLevels,
+      dualCraft: settings.craftingSkill >= 51 ? settings.dualCraft : false,
+    },
+    blob,
+  );
 }
 
 export function App() {
-  const [mode, setMode] = useState("regular");
-  const [tab, setTab] = useState<Tab>("crafts");
-  const [search, setSearch] = useState("");
-  const [stationChip, setStationChip] = useState("");
-  const [traderChip, setTraderChip] = useState("");
-  const [traderLevelChip, setTraderLevelChip] = useState(0);
+  const initialUi = loadUiState();
+  const [mode, setMode] = useState(initialUi.mode);
+  const [tab, setTab] = useState<Tab>(initialUi.tab);
+  const [search, setSearch] = useState(initialUi.search);
+  const [stationChip, setStationChip] = useState(initialUi.stationChip);
+  const [traderChip, setTraderChip] = useState(initialUi.traderChip);
+  const [traderLevelChip, setTraderLevelChip] = useState(initialUi.traderLevelChip);
   const [blob, setBlob] = useState<ProfitBlob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<Settings>(() => loadSettings("regular"));
+  const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [resetNonce, setResetNonce] = useState(0);
 
   useEffect(() => {
-    setSettings(loadSettings(mode));
-    setStationChip("");
-    setTraderChip("");
-    setTraderLevelChip(0);
     setLoading(true);
     setError(null);
     loadBlob(mode)
       .then((data) => {
         setBlob(data);
         setSettings((current) => hydrate(current, data));
+        setStationChip((chip) => (chip && data.meta.stations[chip] ? chip : ""));
+        setTraderChip((chip) => (chip && data.meta.traders[chip] ? chip : ""));
       })
       .catch((err: Error) => {
         setBlob(null);
@@ -68,8 +85,12 @@ export function App() {
   }, [mode]);
 
   useEffect(() => {
-    saveSettings(mode, settings);
-  }, [mode, settings]);
+    saveSettings(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    saveUiState({ mode, tab, search, stationChip, traderChip, traderLevelChip });
+  }, [mode, tab, search, stationChip, traderChip, traderLevelChip]);
 
   function resetToDefaults() {
     setSearch("");
@@ -143,7 +164,12 @@ export function App() {
     ).flips;
   }, [blob, settings, traderChip, traderLevelChip]);
 
-  const valued = { crafts: recipes.crafts, barters: recipes.barters, flips };
+  const crafts = useMemo(() => {
+    if (!settings.bestTwoCraftsPerStation) return recipes.crafts;
+    return topCraftsPerStation(recipes.crafts, 2);
+  }, [recipes.crafts, settings.bestTwoCraftsPerStation]);
+
+  const valued = { crafts, barters: recipes.barters, flips };
 
   const updated = blob ? formatUpdated(blob.lastUpdated) : null;
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
@@ -230,6 +256,16 @@ export function App() {
                   onChange={(e) => setSettings({ ...settings, hideUnpurchasable: e.target.checked })}
                 />
                 Hide if an input cannot be bought (Excludes returned tools)
+              </label>
+            ) : null}
+            {tab === "crafts" ? (
+              <label className="check toolbar-check">
+                <input
+                  type="checkbox"
+                  checked={Boolean(settings.bestTwoCraftsPerStation)}
+                  onChange={(e) => setSettings({ ...settings, bestTwoCraftsPerStation: e.target.checked })}
+                />
+                Show best 2 crafts for each station
               </label>
             ) : null}
             {tab === "flips" ? (
@@ -341,7 +377,7 @@ export function App() {
         <a href="https://tarkov.dev" target="_blank" rel="noreferrer">
           tarkov.dev
         </a>
-        . Not affiliated with Battlestate Games. Settings stay in this browser — no accounts.
+        . Not affiliated with Battlestate Games. Settings kept locally. No information collected or uploaded to servers.
       </footer>
     </div>
   );

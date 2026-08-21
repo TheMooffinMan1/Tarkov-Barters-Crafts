@@ -40,8 +40,9 @@ export const DEFAULT_SETTINGS = {
   dualCraft: false,
   gameEdition: "",
   flipDirection: "traderToFlea",
+  bestTwoCraftsPerStation: false,
 };
 
-export function settingsStorageKey(mode) {
-  return `tbc:${mode}:settings`;
+export function settingsStorageKey(_mode) {
+  return "tbc:settings";
 }

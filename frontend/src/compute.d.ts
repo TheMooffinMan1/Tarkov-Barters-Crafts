@@ -3,7 +3,7 @@ declare module "@compute/index.mjs" {
   export const GAME_MODES: { id: string; label: string }[];
   export const INPUT_VALUES: { id: string; label: string }[];
   export const OUTPUT_VALUES: { id: string; label: string }[];
-  export function settingsStorageKey(mode: string): string;
+  export function settingsStorageKey(mode?: string): string;
   export function valuate(
     blob: ProfitBlob,
     settings: Partial<Settings>,
@@ -47,6 +47,7 @@ declare module "@compute/index.mjs" {
     dualCraft: boolean;
     gameEdition: string;
     flipDirection: "traderToFlea" | "fleaToTrader";
+    bestTwoCraftsPerStation: boolean;
     stationFilter?: string;
     traderFilter?: string;
     traderLevelFilter?: number;
