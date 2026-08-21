@@ -1,0 +1,29 @@
+name: Poll tarkov.dev
+
+on:
+  repository_dispatch:
+    types: [tarkov-poll]
+  workflow_dispatch:
+    inputs:
+      modes:
+        description: "Comma-separated modes (regular,pve,pvp-season). Empty = all."
+        required: false
+        default: ""
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build slim blobs
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          DISPATCH_MODES: ${{ github.event.client_payload.modes || github.event.inputs.modes || '' }}
+        run: node poll/run.mjs

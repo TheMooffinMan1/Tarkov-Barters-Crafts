@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.cache/
+frontend/dist/
+frontend/public/blob-*.json
+.wrangler/
+*.log
+.env
+.env.local
+.DS_Store
+Thumbs.db

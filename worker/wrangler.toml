@@ -1,0 +1,15 @@
+name = "tarkov-profit"
+main = "src/index.js"
+compatibility_date = "2026-08-21"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Replace with `wrangler kv namespace create PROFIT_KV` output.
+[[kv_namespaces]]
+binding = "PROFIT_KV"
+id = "REPLACE_ME_KV_NAMESPACE_ID"
+
+[vars]
+GITHUB_REPO = "REPLACE_ME_OWNER/REPLACE_ME_REPO"
+UPSTREAM_BASE = "https://json.tarkov.dev"

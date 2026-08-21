@@ -1,0 +1,390 @@
+{
+  "items": {
+    "data": {
+      "fleaMarket": {
+        "enabled": true,
+        "minPlayerLevel": 15,
+        "sellOfferFeeRate": 0.03,
+        "sellRequirementFeeRate": 0.03,
+        "name": "Flea Market",
+        "normalizedName": "flea-market"
+      },
+      "items": {
+        "item-bolt": {
+          "id": "item-bolt",
+          "name": "Bolts",
+          "shortName": "Bolts",
+          "iconLink": "https://assets.tarkov.dev/item-bolt-icon.webp",
+          "basePrice": 500,
+          "lastLowPrice": 1000,
+          "avg24hPrice": 1100,
+          "types": [],
+          "minLevelForFlea": 1,
+          "buyFromTrader": [
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 700,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 400
+            }
+          ]
+        },
+        "item-gun": {
+          "id": "item-gun",
+          "name": "Test rifle",
+          "shortName": "Rifle",
+          "iconLink": "",
+          "basePrice": 20000,
+          "lastLowPrice": 25000,
+          "avg24hPrice": 26000,
+          "types": ["gun"],
+          "minLevelForFlea": 1,
+          "buyFromTrader": [
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 20000,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 15000
+            }
+          ]
+        },
+        "item-key": {
+          "id": "item-key",
+          "name": "Test key",
+          "shortName": "Key",
+          "iconLink": "",
+          "basePrice": 5000,
+          "lastLowPrice": 8000,
+          "avg24hPrice": 8100,
+          "types": ["keys"],
+          "minLevelForFlea": 1,
+          "buyFromTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 9000,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 2000
+            }
+          ]
+        },
+        "item-water": {
+          "id": "item-water",
+          "name": "Bottle of water",
+          "shortName": "Water",
+          "iconLink": "",
+          "basePrice": 1000,
+          "lastLowPrice": 1200,
+          "avg24hPrice": 1250,
+          "types": ["provisions"],
+          "minLevelForFlea": 1,
+          "properties": { "propertiesType": "ItemPropertiesFoodDrink", "units": 60 },
+          "buyFromTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 1100,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 500
+            }
+          ]
+        },
+        "item-analgin": {
+          "id": "item-analgin",
+          "name": "Analgin painkillers",
+          "shortName": "Analgin",
+          "iconLink": "",
+          "basePrice": 2000,
+          "lastLowPrice": 2500,
+          "avg24hPrice": 2600,
+          "types": ["meds"],
+          "minLevelForFlea": 1,
+          "properties": { "propertiesType": "ItemPropertiesPainkiller", "uses": 4 },
+          "buyFromTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 2200,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 800
+            }
+          ]
+        },
+        "item-bandage": {
+          "id": "item-bandage",
+          "name": "Aseptic bandage",
+          "shortName": "Bandage",
+          "iconLink": "",
+          "basePrice": 300,
+          "lastLowPrice": 400,
+          "avg24hPrice": 420,
+          "types": ["meds"],
+          "minLevelForFlea": 1,
+          "properties": { "propertiesType": "ItemPropertiesMedicalItem", "uses": 1 },
+          "buyFromTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 350,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 100
+            }
+          ]
+        },
+        "item-ai2": {
+          "id": "item-ai2",
+          "name": "AI-2 medkit",
+          "shortName": "AI-2",
+          "iconLink": "",
+          "basePrice": 1500,
+          "lastLowPrice": 2000,
+          "avg24hPrice": 2100,
+          "types": ["meds"],
+          "minLevelForFlea": 1,
+          "properties": { "propertiesType": "ItemPropertiesMedKit", "hitpoints": 100 },
+          "buyFromTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 1800,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 600
+            }
+          ]
+        },
+        "item-armor": {
+          "id": "item-armor",
+          "name": "Test armor",
+          "shortName": "Armor",
+          "iconLink": "",
+          "basePrice": 30000,
+          "lastLowPrice": 40000,
+          "avg24hPrice": 41000,
+          "types": ["armor"],
+          "maxDurability": 50,
+          "minLevelForFlea": 1,
+          "buyFromTrader": [
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 35000,
+              "minTraderLevel": 1
+            }
+          ],
+          "sellToTrader": [
+            {
+              "trader": "trader-prapor",
+              "priceRUB": 10000
+            }
+          ]
+        },
+        "item-case": {
+          "id": "item-case",
+          "name": "Documents case",
+          "shortName": "Docs",
+          "iconLink": "https://assets.tarkov.dev/item-case-icon.webp",
+          "basePrice": 3000,
+          "lastLowPrice": 8000,
+          "avg24hPrice": 8200,
+          "types": [],
+          "minLevelForFlea": 1,
+          "buyFromTrader": [],
+          "sellToTrader": [
+            {
+              "trader": "trader-therapist",
+              "priceRUB": 2500
+            }
+          ]
+        },
+        "item-glue": {
+          "id": "item-glue",
+          "name": "Glue",
+          "shortName": "Glue",
+          "iconLink": "",
+          "basePrice": 50,
+          "lastLowPrice": 0,
+          "avg24hPrice": 0,
+          "types": ["noFlea"],
+          "buyFromTrader": [],
+          "sellToTrader": []
+        },
+        "item-junk": {
+          "id": "item-junk",
+          "name": "Unused junk",
+          "shortName": "Junk",
+          "iconLink": "",
+          "basePrice": 10,
+          "lastLowPrice": 10,
+          "avg24hPrice": 10,
+          "types": [],
+          "buyFromTrader": [],
+          "sellToTrader": []
+        },
+        "item-bitcoin": {
+          "id": "item-bitcoin",
+          "name": "Physical bitcoin",
+          "shortName": "0.2BTC",
+          "basePrice": 100000,
+          "lastLowPrice": 400000,
+          "types": [],
+          "buyFromTrader": [],
+          "sellToTrader": []
+        }
+      }
+    }
+  },
+  "crafts": {
+    "data": [
+      {
+        "id": "craft-docs",
+        "station": "station-workbench",
+        "level": 1,
+        "duration": 3600,
+        "taskUnlock": "quest-gunsmith",
+        "gameEditions": [],
+        "requiredItems": [
+          { "item": "item-bolt", "count": 2, "attributes": {} },
+          { "item": "item-bolt", "count": 1, "attributes": { "tool": true } }
+        ],
+        "requiredQuestItems": [],
+        "productItem": { "item": "item-case", "count": 1, "attributes": {} }
+      },
+      {
+        "id": "craft-btc",
+        "station": "5d494a445b56502f18c98a10",
+        "level": 1,
+        "duration": 300000,
+        "requiredItems": [],
+        "requiredQuestItems": [],
+        "productItem": { "item": "item-bitcoin", "count": 1, "attributes": {} }
+      },
+      {
+        "id": "craft-glue",
+        "station": "station-workbench",
+        "level": 1,
+        "duration": 60,
+        "taskUnlock": null,
+        "gameEditions": [],
+        "requiredItems": [{ "item": "item-bolt", "count": 1, "attributes": {} }],
+        "requiredQuestItems": [],
+        "productItem": { "item": "item-glue", "count": 1, "attributes": {} }
+      },
+      {
+        "id": "craft-sticky",
+        "station": "station-workbench",
+        "level": 1,
+        "duration": 60,
+        "taskUnlock": null,
+        "gameEditions": [],
+        "requiredItems": [
+          { "item": "item-glue", "count": 1, "attributes": {} },
+          { "item": "item-bolt", "count": 1, "attributes": {} }
+        ],
+        "requiredQuestItems": [],
+        "productItem": { "item": "item-case", "count": 1, "attributes": {} }
+      },
+      {
+        "id": "craft-tooling",
+        "station": "station-workbench",
+        "level": 1,
+        "duration": 60,
+        "taskUnlock": null,
+        "gameEditions": [],
+        "requiredItems": [
+          { "item": "item-glue", "count": 1, "attributes": { "tool": true } },
+          { "item": "item-bolt", "count": 1, "attributes": {} }
+        ],
+        "requiredQuestItems": [],
+        "productItem": { "item": "item-case", "count": 1, "attributes": {} }
+      }
+    ]
+  },
+  "barters": {
+    "data": [
+      {
+        "id": "barter-docs",
+        "trader": "trader-mechanic",
+        "taskUnlock": null,
+        "minTraderLevel": 2,
+        "buyLimit": 1,
+        "requiredItems": [{ "item": "item-bolt", "count": 4, "attributes": {} }],
+        "offeredItem": { "item": "item-case", "count": 1, "attributes": {} }
+      },
+      {
+        "id": "barter-glue",
+        "trader": "trader-mechanic",
+        "taskUnlock": null,
+        "minTraderLevel": 1,
+        "buyLimit": 1,
+        "requiredItems": [{ "item": "item-glue", "count": 1, "attributes": {} }],
+        "offeredItem": { "item": "item-case", "count": 1, "attributes": {} }
+      }
+    ]
+  },
+  "traders": {
+    "trader-prapor": { "id": "trader-prapor", "name": "Prapor", "normalizedName": "prapor", "levels": [
+      { "level": 1, "requiredPlayerLevel": 1 },
+      { "level": 2, "requiredPlayerLevel": 15 },
+      { "level": 3, "requiredPlayerLevel": 26 },
+      { "level": 4, "requiredPlayerLevel": 36 }
+    ]},
+    "trader-therapist": { "id": "trader-therapist", "name": "Therapist", "normalizedName": "therapist", "levels": [
+      { "level": 1, "requiredPlayerLevel": 1 },
+      { "level": 2, "requiredPlayerLevel": 13 },
+      { "level": 3, "requiredPlayerLevel": 24 },
+      { "level": 4, "requiredPlayerLevel": 35 }
+    ]},
+    "trader-mechanic": { "id": "trader-mechanic", "name": "Mechanic", "normalizedName": "mechanic", "levels": [
+      { "level": 1, "requiredPlayerLevel": 1 },
+      { "level": 2, "requiredPlayerLevel": 20 },
+      { "level": 3, "requiredPlayerLevel": 30 },
+      { "level": 4, "requiredPlayerLevel": 40 }
+    ]}
+  },
+  "hideout": {
+    "station-workbench": {
+      "id": "station-workbench",
+      "name": "Workbench",
+      "normalizedName": "workbench",
+      "levels": [{}, {}, {}]
+    },
+    "station-intel": {
+      "id": "station-intel",
+      "name": "Intelligence Center",
+      "normalizedName": "intelligence-center",
+      "levels": [{}, {}, {}]
+    }
+  },
+  "tasks": {
+    "quest-gunsmith": { "id": "quest-gunsmith", "name": "Gunsmith - Part 1", "trader": "trader-mechanic", "minPlayerLevel": 10, "minTraderLevel": 2 }
+  }
+}
