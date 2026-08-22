@@ -1,10 +1,11 @@
 const MODES = ["regular", "pve", "pvp-season"];
 const CACHE_TTL_SECONDS = 120;
+const POLL_INTERVAL_MS = 2 * 60 * 1000;
 
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
@@ -25,7 +26,7 @@ async function headItemsEtag(env, mode) {
   const response = await fetch(`${base}/${mode}/items`, {
     method: "HEAD",
     headers: {
-      "User-Agent": `TarkovBartersCrafts/1.0 (${env.GITHUB_REPO || "profit-tracker"}; cron etag gate)`,
+      "User-Agent": `TarkovBartersCrafts/1.0 (${env.GITHUB_REPO || "profit-tracker"}; visit etag gate)`,
     },
   });
   if (!response.ok) {
@@ -74,6 +75,19 @@ async function checkAndDispatch(env) {
   return { changed };
 }
 
+async function maybePoll(env, ctx) {
+  const now = Date.now();
+  const lastRaw = await env.PROFIT_KV.get("poll:lastAt");
+  const lastAt = lastRaw ? Number(lastRaw) : 0;
+  const elapsed = now - lastAt;
+  if (elapsed < POLL_INTERVAL_MS) {
+    return { polled: false, nextPollIn: POLL_INTERVAL_MS - elapsed };
+  }
+  await env.PROFIT_KV.put("poll:lastAt", String(now));
+  ctx.waitUntil(checkAndDispatch(env).catch((err) => console.error("poll failed", err)));
+  return { polled: true, queued: true };
+}
+
 async function serveBlob(request, env, ctx) {
   const url = new URL(request.url);
   const mode = url.searchParams.get("mode") || "regular";
@@ -99,10 +113,6 @@ async function serveBlob(request, env, ctx) {
 }
 
 export default {
-  async scheduled(_event, env, ctx) {
-    ctx.waitUntil(checkAndDispatch(env));
-  },
-
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
@@ -110,6 +120,10 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/api/blob" && request.method === "GET") {
       return serveBlob(request, env, ctx);
+    }
+    if (url.pathname === "/api/poll" && request.method === "POST") {
+      const result = await maybePoll(env, ctx);
+      return json(result);
     }
     if (url.pathname === "/api/health") {
       return json({ ok: true });

@@ -8,7 +8,7 @@ import {
   type Settings,
   type ValuatedRow,
 } from "@compute/index.mjs";
-import { loadBlob } from "./lib/api";
+import { loadBlob, requestPoll } from "./lib/api";
 import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
 import { withQuestLlSync } from "./lib/quests";
 import { formatUpdated } from "./lib/format";
@@ -90,6 +90,7 @@ export function App() {
     modeRef.current = mode;
     setLoading(true);
     setError(null);
+    requestPoll();
     loadBlob(mode)
       .then((data) => {
         setBlob(data);
@@ -106,12 +107,19 @@ export function App() {
 
   useEffect(() => {
     const intervalMs = 2 * 60 * 1000;
-    const id = window.setInterval(() => {
+    function refreshPrices() {
+      if (document.visibilityState !== "visible") return;
+      requestPoll();
       loadBlob(mode)
         .then((data) => setBlob(data))
         .catch(() => {});
-    }, intervalMs);
-    return () => window.clearInterval(id);
+    }
+    const id = window.setInterval(refreshPrices, intervalMs);
+    document.addEventListener("visibilitychange", refreshPrices);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", refreshPrices);
+    };
   }, [mode]);
 
   useEffect(() => {

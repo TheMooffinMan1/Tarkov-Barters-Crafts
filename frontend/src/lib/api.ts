@@ -1,7 +1,22 @@
 import type { ProfitBlob } from "@compute/index.mjs";
 
+export function workerBase(): string {
+  return (import.meta.env.VITE_BLOB_BASE || "").replace(/\/$/, "");
+}
+
+/** Ask the worker to check tarkov.dev (no-op without VITE_BLOB_BASE). Rate-limited server-side. */
+export async function requestPoll(): Promise<void> {
+  const base = workerBase();
+  if (!base) return;
+  try {
+    await fetch(`${base}/api/poll`, { method: "POST" });
+  } catch {
+    /* background refresh */
+  }
+}
+
 export function blobUrls(mode: string): string[] {
-  const base = (import.meta.env.VITE_BLOB_BASE || "").replace(/\/$/, "");
+  const base = workerBase();
   const urls: string[] = [];
   if (base) urls.push(`${base}/api/blob?mode=${mode}`);
   else if (import.meta.env.PROD) urls.push(`/api/blob?mode=${mode}`);
