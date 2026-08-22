@@ -15,6 +15,7 @@ import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated 
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
+import { HoverTip } from "./components/HoverTip";
 
 function topCraftsPerStation(crafts: ValuatedRow[], limit = 2): ValuatedRow[] {
   const byStation = new Map<string, ValuatedRow[]>();
@@ -298,26 +299,34 @@ export function App() {
         {!loading && !error && blob ? (
           <div className="status-meta">
             {canRemoteRefresh() && lastCheckedAt ? (
-              <span className="muted status-tip" title={`Last checked: ${formatAbsoluteTime(lastCheckedAt)}`}>
-                Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}
-              </span>
+              <HoverTip
+                className="muted"
+                label <>Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}</>
+                detail={`Last checked: ${formatAbsoluteTime(lastCheckedAt)}`}
+              />
             ) : null}
             {needsRefresh ? (
-              <span
-                className="refreshing status-tip"
-                title={`Price data from: ${formatAbsoluteTime(blob.lastUpdated)}`}
-              >
-                <span className="spinner" aria-hidden="true" />
-                Refreshing price data…
-              </span>
+              <HoverTip
+                className="refreshing"
+                label={
+                  <>
+                    <span className="spinner" aria-hidden="true" />
+                    Refreshing price data…
+                  </>
+                }
+                detail={`Price data from: ${formatAbsoluteTime(blob.lastUpdated)}`}
+              />
             ) : (
-              <span
-                className={`status-tip ${dataAge?.stale ? "stale" : "muted"}`}
-                title={`Price data from: ${formatAbsoluteTime(blob.lastUpdated)}`}
-              >
-                Price data from {formatRelativeAge(blob.lastUpdated, now)}
-                {dataAge?.stale ? " (may be stale)" : ""}
-              </span>
+              <HoverTip
+                className={dataAge?.stale ? "stale" : "muted"}
+                label={
+                  <>
+                    Price data from {formatRelativeAge(blob.lastUpdated, now)}
+                    {dataAge?.stale ? " (may be stale)" : ""}
+                  </>
+                }
+                detail={`Price data from: ${formatAbsoluteTime(blob.lastUpdated)}`}
+              />
             )}
           </div>
         ) : null}
