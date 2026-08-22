@@ -63,6 +63,13 @@ h1 { margin: 0; font-size: 34px; font-weight: 650; letter-spacing: -0.03em; }
   gap: 16px;
   flex-wrap: wrap;
   font-size: 14px;
+  align-items: flex-start;
+}
+
+.status-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .stale { color: var(--warn); }
 

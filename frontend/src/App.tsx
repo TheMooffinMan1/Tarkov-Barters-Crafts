@@ -11,7 +11,7 @@ import {
 import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
 import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
 import { withQuestLlSync } from "./lib/quests";
-import { blobNeedsRefresh, formatUpdated } from "./lib/format";
+import { blobNeedsRefresh, formatRelativeAge, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
@@ -84,7 +84,13 @@ export function App() {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [resetNonce, setResetNonce] = useState(0);
   const [now, setNow] = useState(() => Date.now());
+  const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
   const modeRef = useRef(mode);
+
+  async function pollUpstream() {
+    const result = await requestPoll();
+    if (result?.lastCheckedAt) setLastCheckedAt(result.lastCheckedAt);
+  }
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
@@ -96,7 +102,7 @@ export function App() {
     modeRef.current = mode;
     setLoading(true);
     setError(null);
-    requestPoll();
+    pollUpstream();
     loadBlob(mode)
       .then((data) => {
         setBlob(data);
@@ -116,7 +122,7 @@ export function App() {
     const intervalMs = 2 * 60 * 1000;
     function refreshPrices() {
       if (document.visibilityState !== "visible") return;
-      requestPoll();
+      pollUpstream();
       loadBlob(mode)
         .then((data) => {
           setBlob(data);
@@ -139,7 +145,7 @@ export function App() {
     const intervalMs = 15_000;
     function refreshStale() {
       if (document.visibilityState !== "visible") return;
-      requestPoll();
+      pollUpstream();
       loadBlob(mode)
         .then((data) => {
           setBlob(data);
@@ -248,7 +254,7 @@ export function App() {
 
   const valued = { crafts, barters: recipes.barters, flips };
 
-  const updated = blob ? formatUpdated(blob.lastUpdated, now) : null;
+  const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();
@@ -289,17 +295,23 @@ export function App() {
             {error} Run <code>npm run blob</code> for local data, or point <code>VITE_BLOB_BASE</code> at the worker.
           </span>
         ) : null}
-        {updated && !needsRefresh ? (
-          <span className={updated.stale ? "stale" : "muted"}>
-            Prices {updated.stale ? "may be stale — " : "updated "}
-            {updated.label}
-          </span>
-        ) : null}
-        {!loading && !error && needsRefresh ? (
-          <span className="refreshing">
-            <span className="spinner" aria-hidden="true" />
-            Refreshing data…
-          </span>
+        {!loading && !error && blob ? (
+          <div className="status-meta">
+            {canRemoteRefresh() && lastCheckedAt ? (
+              <span className="muted">Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}</span>
+            ) : null}
+            {needsRefresh ? (
+              <span className="refreshing">
+                <span className="spinner" aria-hidden="true" />
+                Refreshing price data…
+              </span>
+            ) : (
+              <span className={dataAge?.stale ? "stale" : "muted"}>
+                Price data from {formatRelativeAge(blob.lastUpdated, now)}
+                {dataAge?.stale ? " (may be stale)" : ""}
+              </span>
+            )}
+          </div>
         ) : null}
       </div>
 

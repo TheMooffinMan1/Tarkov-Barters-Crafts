@@ -8,14 +8,29 @@ export function canRemoteRefresh(): boolean {
   return Boolean(workerBase());
 }
 
+export type PollResult = {
+  polled: boolean;
+  lastCheckedAt: number | null;
+  nextPollIn?: number;
+  queued?: boolean;
+};
+
 /** Ask the worker to check tarkov.dev (no-op without VITE_BLOB_BASE). Rate-limited server-side. */
-export async function requestPoll(): Promise<void> {
+export async function requestPoll(): Promise<PollResult | null> {
   const base = workerBase();
-  if (!base) return;
+  if (!base) return null;
   try {
-    await fetch(`${base}/api/poll`, { method: "POST" });
+    const response = await fetch(`${base}/api/poll`, { method: "POST" });
+    if (!response.ok) return null;
+    const body = (await response.json()) as PollResult;
+    return {
+      polled: Boolean(body.polled),
+      lastCheckedAt: body.lastCheckedAt ?? null,
+      nextPollIn: body.nextPollIn,
+      queued: body.queued,
+    };
   } catch {
-    /* background refresh */
+    return null;
   }
 }
 

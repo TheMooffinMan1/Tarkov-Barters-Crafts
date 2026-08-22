@@ -25,17 +25,26 @@ export function formatDuration(seconds: number): string {
   return `${rem}s`;
 }
 
+function relativeAgeLabel(ageMs: number): string {
+  const minutes = Math.floor(ageMs / 60000);
+  if (minutes >= 60) return `${Math.floor(minutes / 60)}h ${minutes % 60}m ago`;
+  if (minutes >= 1) return `${minutes}m ago`;
+  return "just now";
+}
+
+export function formatRelativeAge(when: string | number, now = Date.now()): string {
+  const then = typeof when === "number" ? when : new Date(when).getTime();
+  if (Number.isNaN(then)) return "unknown";
+  return relativeAgeLabel(Math.max(0, now - then));
+}
+
 export function formatUpdated(iso: string, now = Date.now()): { label: string; stale: boolean } {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return { label: "unknown", stale: true };
   const ageMs = blobAgeMs(iso, now);
   const stale = ageMs > 2 * 60 * 60 * 1000;
-  const minutes = Math.floor(ageMs / 60000);
-  let relative = "just now";
-  if (minutes >= 60) relative = `${Math.floor(minutes / 60)}h ${minutes % 60}m ago`;
-  else if (minutes >= 1) relative = `${minutes}m ago`;
   const absolute = new Date(iso).toLocaleString();
-  return { label: `${relative} (${absolute})`, stale };
+  return { label: `${relativeAgeLabel(ageMs)} (${absolute})`, stale };
 }
 
 /** Show "Refreshing data" and poll faster once prices are older than this. */

@@ -82,11 +82,15 @@ async function maybePoll(env, ctx) {
   const lastAt = lastRaw ? Number(lastRaw) : 0;
   const elapsed = now - lastAt;
   if (elapsed < POLL_INTERVAL_MS) {
-    return { polled: false, nextPollIn: POLL_INTERVAL_MS - elapsed };
+    return {
+      polled: false,
+      nextPollIn: POLL_INTERVAL_MS - elapsed,
+      lastCheckedAt: lastAt || null,
+    };
   }
   await env.PROFIT_KV.put("poll:lastAt", String(now));
   ctx.waitUntil(checkAndDispatch(env).catch((err) => console.error("poll failed", err)));
-  return { polled: true, queued: true };
+  return { polled: true, queued: true, lastCheckedAt: now };
 }
 
 async function serveBlob(request, env, ctx) {
