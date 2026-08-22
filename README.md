@@ -24,14 +24,14 @@ On Windows, this repo’s folder name contains `&`, which breaks `.cmd` shims. T
 ## Architecture
 
 ```
-Cloudflare Worker cron (every 15 min)
+Cloudflare Worker cron (every 2 min)
   HEAD /{mode}/items  →  compare ETag to KV
   if changed → repository_dispatch
 GitHub Actions
   GET items, crafts, barters + small name tables
   buildProfitBlob()  →  KV blob:{mode} + etag:items:{mode}
 Cloudflare Worker
-  GET /api/blob?mode=  →  KV via Cache API (15 min)
+  GET /api/blob?mode=  →  KV via Cache API (2 min)
 Cloudflare Pages
   static UI, valuates the blob in the browser
 ```
@@ -49,10 +49,10 @@ Compute (`compute/`) has no fetch, no env, and no Cloudflare/GitHub APIs.
    - `CF_ACCOUNT_ID`
    - `CF_API_TOKEN` — KV write on that namespace
    - `CF_KV_NAMESPACE_ID`
-6. Deploy the worker: `npx wrangler deploy` from `worker/`. Cron is `*/15 * * * *`. Trigger a run with **Actions → Poll tarkov.dev → Run workflow** before relying on cron.
-7. Cloudflare Pages: build `npm --prefix frontend install && npm --prefix frontend run build`, output `frontend/dist`. Set `VITE_BLOB_BASE` to the worker origin (for example `https://tarkov-profit.<account>.workers.dev`) so the UI loads `/api/blob`. Route `/api/*` to the worker if you put both on one domain.
+6. Deploy the worker: `npx wrangler deploy` from `worker/`. Cron is `*/2 * * * *`. Trigger a run with **Actions → Poll tarkov.dev → Run workflow** before relying on cron.
+7. Cloudflare Pages: build `npm --prefix frontend install && npm --prefix frontend run build`, output `frontend/dist`. Set `VITE_BLOB_BASE` to the worker origin (for example `https://tarkov-profit.<account>.workers.dev`) so the UI loads `/api/blob`. Set `VITE_SITE_URL` to your public Pages URL (for example `https://your-project.pages.dev`) so canonical links, Open Graph, `sitemap.xml`, and `robots.txt` use the correct origin. Route `/api/*` to the worker if you put both on one domain.
 
-Do not turn the cadence below 15 minutes until the ETag gate is proven; 5 minutes is the next defensible step. Paying for Workers does **not** let you parse `/items` on Cloudflare (128 MB isolate limit).
+The cron only sends lightweight HEAD requests to tarkov.dev; full downloads run in GitHub Actions when the ETag changes. Paying for Workers does **not** let you parse `/items` on Cloudflare (128 MB isolate limit).
 
 ## Courtesy
 

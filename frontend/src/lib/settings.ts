@@ -38,11 +38,14 @@ function normalizeSettings(parsed: Partial<Settings>): Settings {
   } else if (inputValue === "fleaLow") {
     inputValue = "flea";
   }
+  const legacySubtract = (parsed as { subtractBitcoinProfit?: boolean }).subtractBitcoinProfit;
+  const addBitcoinProfit = parsed.addBitcoinProfit ?? legacySubtract ?? DEFAULT_SETTINGS.addBitcoinProfit;
   return {
     ...DEFAULT_SETTINGS,
     ...parsed,
     inputValue,
     useFleaAvg,
+    addBitcoinProfit,
     filterToProgress: false,
     hiddenQuestIds: staleLl ? [] : (parsed.hiddenQuestIds ?? []),
     stationLevels: parsed.stationLevels ?? {},

@@ -1,0 +1,18 @@
+{
+  "name": "Tarkov Crafts, Barters & Flips",
+  "short_name": "Tarkov Profits",
+  "description": "Live hideout craft, trader barter, and cash-flip profitability for Escape from Tarkov.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0f12",
+  "theme_color": "#0c0f12",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/og-image.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

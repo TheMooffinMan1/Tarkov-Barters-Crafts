@@ -105,6 +105,16 @@ export function App() {
   }, [mode]);
 
   useEffect(() => {
+    const intervalMs = 2 * 60 * 1000;
+    const id = window.setInterval(() => {
+      loadBlob(mode)
+        .then((data) => setBlob(data))
+        .catch(() => {});
+    }, intervalMs);
+    return () => window.clearInterval(id);
+  }, [mode]);
+
+  useEffect(() => {
     saveSettings(settings);
   }, [settings]);
 
@@ -160,7 +170,7 @@ export function App() {
     settings.includeFuelCost,
     settings.fuelValue,
     settings.solarPower,
-    settings.subtractBitcoinProfit,
+    settings.addBitcoinProfit,
     settings.bitcoinGpus,
     settings.hideUnpurchasable,
     settings.haveQuestItems,
@@ -224,8 +234,8 @@ export function App() {
     <div className="app">
       <header className="top">
         <div>
-          <p className="eyebrow">Escape from Tarkov</p>
-          <h1>Crafts, barters &amp; flips</h1>
+          <p className="eyebrow">Escape from Tarkov profit calculator</p>
+          <h1>Hideout crafts, barters &amp; flips</h1>
         </div>
         <ModeToggle mode={mode} onChange={setMode} />
       </header>

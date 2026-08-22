@@ -346,7 +346,7 @@ function bitcoinSellRub(blob) {
 }
 
 function bitcoinIncomePerHour(blob, settings) {
-  if (!settings.subtractBitcoinProfit) return 0;
+  if (!settings.addBitcoinProfit) return 0;
   const gpus = Number(settings.bitcoinGpus) || 0;
   if (gpus < 1) return 0;
   const sell = bitcoinSellRub(blob);
@@ -592,9 +592,9 @@ export function valuate(blob, userSettings = {}, parts = {}) {
     const sale = outputSale(outputItem, settings, blob, craft.output.count);
     if (!canSell(sale)) continue;
     const hours = effectiveDuration / 3600;
-    const btcOpportunity = btcPerHour * (duration / 3600);
-    const profit = sale.net - cost - btcOpportunity;
-    const profitPerHour = hours > 0 ? Math.floor((sale.net - cost) / hours - btcPerHour) : 0;
+    const btcBonus = btcPerHour * (duration / 3600);
+    const profit = sale.net - cost + btcBonus;
+    const profitPerHour = hours > 0 ? Math.floor((sale.net - cost) / hours + btcPerHour) : 0;
     const station = blob.meta.stations[craft.stationId];
 
     crafts.push({

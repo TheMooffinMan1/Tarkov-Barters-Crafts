@@ -181,19 +181,22 @@ export function SettingsPanel({ blob, settings, onChange, onReset }: Props) {
         <label className="check">
           <input
             type="checkbox"
-            checked={Boolean(settings.subtractBitcoinProfit)}
-            onChange={(e) => patch({ subtractBitcoinProfit: e.target.checked })}
+            checked={Boolean(settings.addBitcoinProfit)}
+            onChange={(e) => {
+              const on = e.target.checked;
+              patch(on ? { addBitcoinProfit: true, bitcoinGpus: 0 } : { addBitcoinProfit: false });
+            }}
           />
-          Subtract bitcoin farm profits from crafts
+          Add bitcoin farm profits to crafts
         </label>
-        {settings.subtractBitcoinProfit ? (
+        {settings.addBitcoinProfit ? (
           <label>
-            Graphics cards ({settings.bitcoinGpus})
+            Graphics cards ({settings.bitcoinGpus ?? 0})
             <input
               type="range"
-              min={1}
+              min={0}
               max={50}
-              value={settings.bitcoinGpus || 1}
+              value={settings.bitcoinGpus ?? 0}
               onChange={(e) => patch({ bitcoinGpus: Number(e.target.value) })}
             />
           </label>

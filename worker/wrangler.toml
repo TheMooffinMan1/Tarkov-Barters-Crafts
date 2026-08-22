@@ -3,7 +3,7 @@ main = "src/index.js"
 compatibility_date = "2026-08-21"
 
 [triggers]
-crons = ["*/15 * * * *"]
+crons = ["*/2 * * * *"]
 
 # Replace with `wrangler kv namespace create PROFIT_KV` output.
 [[kv_namespaces]]

@@ -1,5 +1,5 @@
 const MODES = ["regular", "pve", "pvp-season"];
-const CACHE_TTL_SECONDS = 900;
+const CACHE_TTL_SECONDS = 120;
 
 function corsHeaders() {
   return {

@@ -36,7 +36,7 @@ declare module "@compute/index.mjs" {
     includeFuelCost: boolean;
     fuelValue: string;
     solarPower: boolean;
-    subtractBitcoinProfit: boolean;
+    addBitcoinProfit: boolean;
     bitcoinGpus: number;
     hideUnprofitable: boolean;
     hideUnpurchasable: boolean;

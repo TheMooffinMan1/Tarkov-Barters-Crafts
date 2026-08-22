@@ -213,21 +213,28 @@ test("optional fuel cost uses cheapest tank and respects solar / HM", () => {
   assert.ok(Math.abs(fuelSolar.cost - fuel.cost / 2) < 0.01);
 });
 
-test("subtract bitcoin farm income from craft profit using Therapist sell", () => {
+test("add bitcoin farm income to craft profit using Therapist sell", () => {
   const plain = valuate(built, {
     ...DEFAULT_SETTINGS,
     includeFuelCost: false,
-    subtractBitcoinProfit: false,
+    addBitcoinProfit: false,
   }).crafts.find((row) => row.id === "craft-docs");
   const withBtc = valuate(built, {
     ...DEFAULT_SETTINGS,
     includeFuelCost: false,
-    subtractBitcoinProfit: true,
+    addBitcoinProfit: true,
     bitcoinGpus: 1,
+  }).crafts.find((row) => row.id === "craft-docs");
+  const zeroGpus = valuate(built, {
+    ...DEFAULT_SETTINGS,
+    includeFuelCost: false,
+    addBitcoinProfit: true,
+    bitcoinGpus: 0,
   }).crafts.find((row) => row.id === "craft-docs");
   // 1 GPU: 300000s/coin → 3600/300000 BTC/h → * 400000 Therapist
   const btcPerHour = (3600 / 300000) * 400000;
-  assert.ok(Math.abs(plain.profit - withBtc.profit - btcPerHour * (plain.duration / 3600)) < 1);
-  assert.ok(withBtc.profit < plain.profit);
-  assert.ok(withBtc.profitPerHour < plain.profitPerHour);
+  assert.equal(zeroGpus.profit, plain.profit);
+  assert.ok(Math.abs(withBtc.profit - plain.profit - btcPerHour * (plain.duration / 3600)) < 1);
+  assert.ok(withBtc.profit > plain.profit);
+  assert.ok(withBtc.profitPerHour > plain.profitPerHour);
 });
