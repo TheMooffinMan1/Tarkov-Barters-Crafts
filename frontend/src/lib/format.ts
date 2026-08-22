@@ -25,10 +25,10 @@ export function formatDuration(seconds: number): string {
   return `${rem}s`;
 }
 
-export function formatUpdated(iso: string): { label: string; stale: boolean } {
+export function formatUpdated(iso: string, now = Date.now()): { label: string; stale: boolean } {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return { label: "unknown", stale: true };
-  const ageMs = Date.now() - then;
+  const ageMs = now - then;
   const stale = ageMs > 2 * 60 * 60 * 1000;
   const minutes = Math.floor(ageMs / 60000);
   let relative = "just now";

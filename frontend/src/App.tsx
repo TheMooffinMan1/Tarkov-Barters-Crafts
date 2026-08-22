@@ -83,7 +83,13 @@ export function App() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [resetNonce, setResetNonce] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const modeRef = useRef(mode);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const modeChanged = modeRef.current !== mode;
@@ -94,6 +100,7 @@ export function App() {
     loadBlob(mode)
       .then((data) => {
         setBlob(data);
+        setNow(Date.now());
         setSettings((current) => hydrate(modeChanged ? resetProgressForMode(current) : current, data));
         setStationChip((chip) => (chip && data.meta.stations[chip] ? chip : ""));
         setTraderChip((chip) => (chip && data.meta.traders[chip] ? chip : ""));
@@ -111,7 +118,10 @@ export function App() {
       if (document.visibilityState !== "visible") return;
       requestPoll();
       loadBlob(mode)
-        .then((data) => setBlob(data))
+        .then((data) => {
+          setBlob(data);
+          setNow(Date.now());
+        })
         .catch(() => {});
     }
     const id = window.setInterval(refreshPrices, intervalMs);
@@ -214,7 +224,7 @@ export function App() {
 
   const valued = { crafts, barters: recipes.barters, flips };
 
-  const updated = blob ? formatUpdated(blob.lastUpdated) : null;
+  const updated = blob ? formatUpdated(blob.lastUpdated, now) : null;
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();

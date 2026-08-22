@@ -28,7 +28,7 @@ export async function loadBlob(mode: string): Promise<ProfitBlob> {
   const errors: string[] = [];
   for (const url of blobUrls(mode)) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { cache: "no-store" });
       const text = await response.text();
       if (!response.ok || text.trimStart().startsWith("<")) {
         errors.push(`${url} ${response.status}${text.trimStart().startsWith("<") ? " (not JSON)" : ""}`);
