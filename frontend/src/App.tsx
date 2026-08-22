@@ -11,7 +11,7 @@ import {
 import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
 import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
 import { withQuestLlSync } from "./lib/quests";
-import { blobNeedsRefresh, formatRelativeAge, formatUpdated } from "./lib/format";
+import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
@@ -298,15 +298,23 @@ export function App() {
         {!loading && !error && blob ? (
           <div className="status-meta">
             {canRemoteRefresh() && lastCheckedAt ? (
-              <span className="muted">Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}</span>
+              <span className="muted status-tip" title={`Last checked: ${formatAbsoluteTime(lastCheckedAt)}`}>
+                Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}
+              </span>
             ) : null}
             {needsRefresh ? (
-              <span className="refreshing">
+              <span
+                className="refreshing status-tip"
+                title={`Price data from: ${formatAbsoluteTime(blob.lastUpdated)}`}
+              >
                 <span className="spinner" aria-hidden="true" />
                 Refreshing price data…
               </span>
             ) : (
-              <span className={dataAge?.stale ? "stale" : "muted"}>
+              <span
+                className={`status-tip ${dataAge?.stale ? "stale" : "muted"}`}
+                title={`Price data from: ${formatAbsoluteTime(blob.lastUpdated)}`}
+              >
                 Price data from {formatRelativeAge(blob.lastUpdated, now)}
                 {dataAge?.stale ? " (may be stale)" : ""}
               </span>

@@ -38,6 +38,12 @@ export function formatRelativeAge(when: string | number, now = Date.now()): stri
   return relativeAgeLabel(Math.max(0, now - then));
 }
 
+export function formatAbsoluteTime(when: string | number): string {
+  const then = typeof when === "number" ? when : new Date(when).getTime();
+  if (Number.isNaN(then)) return "Unknown";
+  return new Date(then).toLocaleString();
+}
+
 export function formatUpdated(iso: string, now = Date.now()): { label: string; stale: boolean } {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return { label: "unknown", stale: true };
