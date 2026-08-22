@@ -66,6 +66,28 @@ h1 { margin: 0; font-size: 34px; font-weight: 650; letter-spacing: -0.03em; }
 }
 .stale { color: var(--warn); }
 
+.refreshing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gold);
+  font-size: 14px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .layout {
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr);

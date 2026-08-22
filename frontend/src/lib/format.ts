@@ -28,7 +28,7 @@ export function formatDuration(seconds: number): string {
 export function formatUpdated(iso: string, now = Date.now()): { label: string; stale: boolean } {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return { label: "unknown", stale: true };
-  const ageMs = now - then;
+  const ageMs = blobAgeMs(iso, now);
   const stale = ageMs > 2 * 60 * 60 * 1000;
   const minutes = Math.floor(ageMs / 60000);
   let relative = "just now";
@@ -36,6 +36,19 @@ export function formatUpdated(iso: string, now = Date.now()): { label: string; s
   else if (minutes >= 1) relative = `${minutes}m ago`;
   const absolute = new Date(iso).toLocaleString();
   return { label: `${relative} (${absolute})`, stale };
+}
+
+/** Show "Refreshing data" and poll faster once prices are older than this. */
+export const REFRESH_AFTER_MS = 15 * 60 * 1000;
+
+export function blobAgeMs(iso: string, now = Date.now()): number {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return Infinity;
+  return Math.max(0, now - then);
+}
+
+export function blobNeedsRefresh(iso: string, now = Date.now(), thresholdMs = REFRESH_AFTER_MS): boolean {
+  return blobAgeMs(iso, now) > thresholdMs;
 }
 
 export function profitClass(value: number): string {

@@ -8,10 +8,10 @@ import {
   type Settings,
   type ValuatedRow,
 } from "@compute/index.mjs";
-import { loadBlob, requestPoll } from "./lib/api";
+import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
 import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
 import { withQuestLlSync } from "./lib/quests";
-import { formatUpdated } from "./lib/format";
+import { blobNeedsRefresh, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
@@ -131,6 +131,30 @@ export function App() {
       document.removeEventListener("visibilitychange", refreshPrices);
     };
   }, [mode]);
+
+  const needsRefresh = Boolean(blob && canRemoteRefresh() && blobNeedsRefresh(blob.lastUpdated, now));
+
+  useEffect(() => {
+    if (!needsRefresh) return;
+    const intervalMs = 15_000;
+    function refreshStale() {
+      if (document.visibilityState !== "visible") return;
+      requestPoll();
+      loadBlob(mode)
+        .then((data) => {
+          setBlob(data);
+          setNow(Date.now());
+        })
+        .catch(() => {});
+    }
+    refreshStale();
+    const id = window.setInterval(refreshStale, intervalMs);
+    document.addEventListener("visibilitychange", refreshStale);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", refreshStale);
+    };
+  }, [mode, needsRefresh]);
 
   useEffect(() => {
     saveSettings(settings);
@@ -265,10 +289,16 @@ export function App() {
             {error} Run <code>npm run blob</code> for local data, or point <code>VITE_BLOB_BASE</code> at the worker.
           </span>
         ) : null}
-        {updated ? (
+        {updated && !needsRefresh ? (
           <span className={updated.stale ? "stale" : "muted"}>
             Prices {updated.stale ? "may be stale — " : "updated "}
             {updated.label}
+          </span>
+        ) : null}
+        {!loading && !error && needsRefresh ? (
+          <span className="refreshing">
+            <span className="spinner" aria-hidden="true" />
+            Refreshing data…
           </span>
         ) : null}
       </div>

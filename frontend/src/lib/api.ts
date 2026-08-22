@@ -4,6 +4,10 @@ export function workerBase(): string {
   return (import.meta.env.VITE_BLOB_BASE || "").replace(/\/$/, "");
 }
 
+export function canRemoteRefresh(): boolean {
+  return Boolean(workerBase());
+}
+
 /** Ask the worker to check tarkov.dev (no-op without VITE_BLOB_BASE). Rate-limited server-side. */
 export async function requestPoll(): Promise<void> {
   const base = workerBase();
