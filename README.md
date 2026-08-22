@@ -27,6 +27,8 @@ On Windows, this repo’s folder name contains `&`, which breaks `.cmd` shims. T
 Browser visit (and every 2 min while tab is open)
   POST /api/poll  →  worker HEAD /{mode}/items, compare ETag to KV
   if changed → repository_dispatch
+Cloudflare Worker cron (every 30 min, skipped if a visitor poll ran recently)
+  same HEAD / ETag check as fallback when nobody is on the site
 GitHub Actions
   GET items, crafts, barters + small name tables
   buildProfitBlob()  →  KV blob:{mode} + etag:items:{mode}
@@ -49,7 +51,7 @@ Compute (`compute/`) has no fetch, no env, and no Cloudflare/GitHub APIs.
    - `CF_ACCOUNT_ID`
    - `CF_API_TOKEN` — KV write on that namespace
    - `CF_KV_NAMESPACE_ID`
-6. Deploy the worker: `npx wrangler deploy` from `worker/`. Price checks run when someone opens the site (then every 2 minutes while their tab stays open). Trigger an initial run with **Actions → Poll tarkov.dev → Run workflow** before first visit.
+6. Deploy the worker: `npx wrangler deploy` from `worker/`. Price checks run when someone opens the site (then every 2 minutes while their tab stays open), with a **30-minute cron fallback** if nobody visits. Trigger an initial run with **Actions → Poll tarkov.dev → Run workflow** before first visit.
 7. Cloudflare Pages: build `npm --prefix frontend install && npm --prefix frontend run build`, output `frontend/dist`. Set `VITE_BLOB_BASE` to the worker origin (for example `https://tarkov-profit.<account>.workers.dev`) so the UI loads `/api/blob`. Set `VITE_SITE_URL` to your public Pages URL (for example `https://your-project.pages.dev`) so canonical links, Open Graph, `sitemap.xml`, and `robots.txt` use the correct origin. Route `/api/*` to the worker if you put both on one domain.
 
 The cron only sends lightweight HEAD requests to tarkov.dev; full downloads run in GitHub Actions when the ETag changes. Paying for Workers does **not** let you parse `/items` on Cloudflare (128 MB isolate limit).

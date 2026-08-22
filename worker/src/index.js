@@ -1,6 +1,7 @@
 const MODES = ["regular", "pve", "pvp-season"];
 const CACHE_TTL_SECONDS = 120;
 const POLL_INTERVAL_MS = 2 * 60 * 1000;
+const FALLBACK_CRON_MS = 30 * 60 * 1000;
 
 function corsHeaders() {
   return {
@@ -113,6 +114,18 @@ async function serveBlob(request, env, ctx) {
 }
 
 export default {
+  async scheduled(_event, env, ctx) {
+    const now = Date.now();
+    const lastRaw = await env.PROFIT_KV.get("poll:lastAt");
+    const lastAt = lastRaw ? Number(lastRaw) : 0;
+    if (now - lastAt < FALLBACK_CRON_MS) {
+      console.log("cron skipped, polled recently");
+      return;
+    }
+    await env.PROFIT_KV.put("poll:lastAt", String(now));
+    ctx.waitUntil(checkAndDispatch(env).catch((err) => console.error("cron poll failed", err)));
+  },
+
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
