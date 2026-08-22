@@ -15,6 +15,19 @@ function itemOf(blob, id) {
   return blob.items[id] || null;
 }
 
+/** unlockTasks is scanned once per blob instead of per row. */
+const unlockTaskIndexCache = new WeakMap();
+
+function unlockTaskById(blob, id) {
+  let index = unlockTaskIndexCache.get(blob);
+  if (!index) {
+    index = new Map();
+    for (const row of blob.unlockTasks || []) index.set(row.id, row);
+    unlockTaskIndexCache.set(blob, index);
+  }
+  return index.get(id) || null;
+}
+
 function fleaSpotPrice(item, settings) {
   if (settings.useFleaAvg) {
     return Number(item.avg24hPrice) || Number(item.lastLowPrice) || 0;
@@ -106,7 +119,7 @@ function recipeHidden(taskUnlock, requiredQuestItems, settings) {
 
 function unlockBelowPlayer(taskUnlock, settings, blob) {
   if (!settings.filterToProgress || !taskUnlock) return false;
-  const task = (blob.unlockTasks || []).find((row) => row.id === taskUnlock);
+  const task = unlockTaskById(blob, taskUnlock);
   if (!task) return false;
   return (Number(task.minPlayerLevel) || 1) > (Number(settings.playerLevel) || 0);
 }
@@ -183,12 +196,9 @@ function unitCost(id, ctx, valueMode = ctx.settings.inputValue) {
   let barter = 0;
   if (needsProduction) {
     ctx.stack.add(id);
-    if (mode !== "barter") craft = cheapestRecipe(id, "craft", ctx);
-    if (mode !== "craft") barter = cheapestRecipe(id, "barter", ctx);
-    if (mode === "lowest" || (flea <= 0 && trader <= 0)) {
-      craft = cheapestRecipe(id, "craft", ctx);
-      barter = cheapestRecipe(id, "barter", ctx);
-    }
+    const wantBoth = mode === "lowest" || (flea <= 0 && trader <= 0);
+    if (wantBoth || mode !== "barter") craft = cheapestRecipe(id, "craft", ctx);
+    if (wantBoth || mode !== "craft") barter = cheapestRecipe(id, "barter", ctx);
     ctx.stack.delete(id);
   }
 
@@ -537,7 +547,7 @@ function nameHay(item, extra = []) {
 
 function taskName(blob, id) {
   if (!id) return null;
-  const task = (blob.unlockTasks || []).find((row) => row.id === id);
+  const task = unlockTaskById(blob, id);
   return task?.name || id;
 }
 

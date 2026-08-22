@@ -97,7 +97,9 @@ async function serveBlob(request, env, ctx) {
   }
 
   const cache = caches.default;
-  const cacheKey = new Request(url.toString(), { method: "GET" });
+  // Key on the validated mode only, so junk query params cannot mint
+  // unlimited cache misses (each miss is a billable KV read).
+  const cacheKey = new Request(`${url.origin}/api/blob?mode=${mode}`, { method: "GET" });
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
 
