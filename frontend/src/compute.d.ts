@@ -59,6 +59,76 @@ declare module "@compute/index.mjs" {
     traderLevelFilter?: number;
   }
 
+  export function lookupItem(blob: ProfitBlob, itemId: string, settings?: Partial<Settings>): ItemLookupResult | null;
+
+  export interface SlimItem {
+    id: string;
+    name: string;
+    shortName: string;
+    iconLink?: string;
+    basePrice: number;
+    lastLowPrice: number;
+    avg24hPrice: number;
+    width: number;
+    height: number;
+    noFlea: boolean;
+    usesDurability: boolean;
+    minLevelForFlea: number;
+    consumable: string | null;
+    resourceUnits: number;
+    buyFromTrader: TraderOffer[];
+    sellToTrader: TraderOffer[];
+    search: string;
+  }
+
+  export interface TraderOffer {
+    traderId: string;
+    priceRUB: number;
+    minTraderLevel: number;
+    taskUnlock: string | null;
+    buyLimit: number | null;
+  }
+
+  export interface HideoutRef {
+    stationId: string;
+    stationName: string;
+    level: number;
+    count: number;
+    foundInRaid: boolean;
+  }
+
+  export interface QuestRef {
+    taskId: string;
+    taskName: string;
+    traderName: string | null;
+    type: string;
+    count: number;
+    foundInRaid: boolean;
+  }
+
+  export interface ItemLookupResult {
+    item: SlimItem;
+    slots: number;
+    flea: {
+      canSell: boolean;
+      blockedReason: string | null;
+      minPlayerLevel: number;
+      lastLow: number;
+      avg24h: number;
+      lastLowPerSlot: number;
+      avg24hPerSlot: number;
+      feeLastLow: number;
+      feeAvg24h: number;
+      netLastLow: number;
+      netAvg24h: number;
+    };
+    traderSell: Array<TraderOffer & { traderName: string; locked: boolean }>;
+    refs: {
+      hideout: HideoutRef[];
+      quests: QuestRef[];
+    };
+  }
+
   export interface ProfitBlob {
     lastUpdated: string;
     meta: {
@@ -82,10 +152,11 @@ declare module "@compute/index.mjs" {
       >;
       intelligenceCenterId: string | null;
     };
-    items: Record<string, unknown>;
+    items: Record<string, SlimItem>;
     crafts: unknown[];
     barters: { traderId: string; minTraderLevel?: number; taskUnlock?: string | null }[];
     flips: { traderId: string; minTraderLevel?: number; taskUnlock?: string | null }[];
+    itemRefs?: Record<string, { hideout: HideoutRef[]; quests: QuestRef[] }>;
     unlockTasks: {
       id: string;
       name: string;

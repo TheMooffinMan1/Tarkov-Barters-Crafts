@@ -18,21 +18,19 @@ function blob() {
   });
 }
 
-test("drops bitcoin farm and unused catalogue items", () => {
+test("includes full catalogue items", () => {
   const out = blob();
   assert.equal(
     out.crafts.map((c) => c.id).sort().join(","),
     "craft-docs,craft-glue,craft-sticky,craft-superwater,craft-tooling",
   );
   assert.equal(out.barters.length, 2);
-  assert.ok(!out.items["item-junk"]);
-  assert.ok(!out.items["item-bitcoin"]);
+  assert.ok(out.items["item-junk"]);
+  assert.ok(out.items["item-bitcoin"]);
   assert.ok(out.items["item-bolt"]);
-  assert.ok(out.items["item-case"]);
-  assert.ok(out.items["item-glue"]);
-  assert.ok(out.items["5d1b36a186f7742523398433"]);
-  assert.equal(out.items["5d1b385e86f774252167b98a"].consumable, "waterFilter");
-  assert.ok(out.items["59faff1d86f7746c51718c9c"]);
+  assert.equal(out.items["item-junk"].search, "unusedjunkjunk");
+  assert.equal(out.items["item-junk"].width, 1);
+  assert.equal(out.items["item-junk"].height, 1);
 });
 
 test("tools are flagged and not treated as extra product", () => {
@@ -72,4 +70,21 @@ test("meta carries flea rates and station names", () => {
   assert.equal(out.meta.traders["trader-mechanic"].name, "Mechanic");
   assert.equal(out.meta.traders["trader-mechanic"].levels[1].requiredPlayerLevel, 20);
   assert.ok(out.lastUpdated);
+});
+
+test("itemRefs index hideout and quest requirements", () => {
+  const out = blob();
+  const filter = out.itemRefs["5d1b385e86f774252167b98a"];
+  assert.equal(filter.hideout.length, 1);
+  assert.equal(filter.hideout[0].stationName, "Lavatory");
+  assert.equal(filter.hideout[0].level, 3);
+  assert.equal(filter.hideout[0].count, 2);
+  assert.equal(filter.hideout[0].foundInRaid, true);
+
+  const bolt = out.itemRefs["item-bolt"];
+  assert.equal(bolt.hideout.length, 1);
+  assert.equal(bolt.hideout[0].foundInRaid, false);
+  assert.equal(bolt.quests.length, 2);
+  assert.ok(bolt.quests.some((row) => row.taskName === "Gunsmith - Part 1" && row.type === "giveItem" && row.foundInRaid));
+  assert.ok(bolt.quests.some((row) => row.taskName === "Find bolts" && row.type === "findItem"));
 });

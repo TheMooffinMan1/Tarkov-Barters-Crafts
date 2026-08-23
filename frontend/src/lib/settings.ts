@@ -5,12 +5,13 @@ import {
   type Settings,
 } from "@compute/index.mjs";
 
-export type Tab = "crafts" | "barters" | "flips";
+export type Tab = "crafts" | "barters" | "flips" | "items";
 
 export type UiState = {
   mode: string;
   tab: Tab;
   search: string;
+  selectedItemId: string;
   stationChip: string;
   traderChip: string;
   traderLevelChip: number;
@@ -23,6 +24,7 @@ const DEFAULT_UI: UiState = {
   mode: "regular",
   tab: "crafts",
   search: "",
+  selectedItemId: "",
   stationChip: "",
   traderChip: "",
   traderLevelChip: 0,
@@ -91,11 +93,15 @@ export function loadUiState(): UiState {
     if (!raw) return { ...DEFAULT_UI };
     const parsed = JSON.parse(raw) as Partial<UiState>;
     const mode = GAME_MODES.some((entry) => entry.id === parsed.mode) ? parsed.mode! : DEFAULT_UI.mode;
-    const tab = parsed.tab === "barters" || parsed.tab === "flips" || parsed.tab === "crafts" ? parsed.tab : DEFAULT_UI.tab;
+    const tab =
+      parsed.tab === "barters" || parsed.tab === "flips" || parsed.tab === "crafts" || parsed.tab === "items"
+        ? parsed.tab
+        : DEFAULT_UI.tab;
     return {
       mode,
       tab,
       search: typeof parsed.search === "string" ? parsed.search : "",
+      selectedItemId: typeof parsed.selectedItemId === "string" ? parsed.selectedItemId : "",
       stationChip: typeof parsed.stationChip === "string" ? parsed.stationChip : "",
       traderChip: typeof parsed.traderChip === "string" ? parsed.traderChip : "",
       traderLevelChip: Number(parsed.traderLevelChip) || 0,

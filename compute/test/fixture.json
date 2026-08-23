@@ -245,6 +245,8 @@
           "basePrice": 10,
           "lastLowPrice": 10,
           "avg24hPrice": 10,
+          "width": 1,
+          "height": 1,
           "types": [],
           "buyFromTrader": [],
           "sellToTrader": []
@@ -471,6 +473,30 @@
     ]}
   },
   "hideout": {
+    "station-lavatory": {
+      "id": "station-lavatory",
+      "name": "Lavatory",
+      "normalizedName": "lavatory",
+      "levels": [
+        {},
+        {},
+        {
+          "level": 3,
+          "itemRequirements": [
+            {
+              "item": "5d1b385e86f774252167b98a",
+              "count": 2,
+              "attributes": { "foundInRaid": true }
+            },
+            {
+              "item": "item-bolt",
+              "count": 5,
+              "attributes": { "foundInRaid": false }
+            }
+          ]
+        }
+      ]
+    },
     "station-workbench": {
       "id": "station-workbench",
       "name": "Workbench",
@@ -485,6 +511,34 @@
     }
   },
   "tasks": {
-    "quest-gunsmith": { "id": "quest-gunsmith", "name": "Gunsmith - Part 1", "trader": "trader-mechanic", "minPlayerLevel": 10, "minTraderLevel": 2 }
+    "quest-gunsmith": {
+      "id": "quest-gunsmith",
+      "name": "Gunsmith - Part 1",
+      "trader": "trader-mechanic",
+      "minPlayerLevel": 10,
+      "minTraderLevel": 2,
+      "objectives": [
+        {
+          "type": "giveItem",
+          "count": 2,
+          "foundInRaid": true,
+          "items": ["item-bolt"]
+        }
+      ]
+    },
+    "quest-find-bolt": {
+      "id": "quest-find-bolt",
+      "name": "Find bolts",
+      "trader": "trader-prapor",
+      "minPlayerLevel": 5,
+      "objectives": [
+        {
+          "type": "findItem",
+          "count": 3,
+          "foundInRaid": false,
+          "items": ["item-bolt"]
+        }
+      ]
+    }
   }
 }

@@ -15,6 +15,7 @@ import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated 
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
+import { ItemLookup } from "./components/ItemLookup";
 import { HoverTip } from "./components/HoverTip";
 
 function topCraftsPerStation(crafts: ValuatedRow[], limit = 2): ValuatedRow[] {
@@ -76,6 +77,7 @@ export function App() {
   const [mode, setMode] = useState(initialUi.mode);
   const [tab, setTab] = useState<Tab>(initialUi.tab);
   const [search, setSearch] = useState(initialUi.search);
+  const [selectedItemId, setSelectedItemId] = useState(initialUi.selectedItemId);
   const [stationChip, setStationChip] = useState(initialUi.stationChip);
   const [traderChip, setTraderChip] = useState(initialUi.traderChip);
   const [traderLevelChip, setTraderLevelChip] = useState(initialUi.traderLevelChip);
@@ -168,8 +170,8 @@ export function App() {
   }, [settings]);
 
   useEffect(() => {
-    saveUiState({ mode, tab, search, stationChip, traderChip, traderLevelChip });
-  }, [mode, tab, search, stationChip, traderChip, traderLevelChip]);
+    saveUiState({ mode, tab, search, selectedItemId, stationChip, traderChip, traderLevelChip });
+  }, [mode, tab, search, selectedItemId, stationChip, traderChip, traderLevelChip]);
 
   function resetToDefaults() {
     setSearch("");
@@ -256,6 +258,7 @@ export function App() {
   const valued = { crafts, barters: recipes.barters, flips };
 
   const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
+  const itemCount = blob ? Object.keys(blob.items).length : 0;
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();
@@ -301,7 +304,7 @@ export function App() {
             {canRemoteRefresh() && lastCheckedAt ? (
               <HoverTip
                 className="muted"
-                label <>Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}</>
+                label={<>Checked tarkov.dev {formatRelativeAge(lastCheckedAt, now)}</>}
                 detail={`Last checked: ${formatAbsoluteTime(lastCheckedAt)}`}
               />
             ) : null}
@@ -347,6 +350,7 @@ export function App() {
                   ["crafts", `Crafts (${valued.crafts.length})`],
                   ["barters", `Barters (${valued.barters.length})`],
                   ["flips", `Flips (${valued.flips.length})`],
+                  ["items", `Items (${itemCount})`],
                 ] as const
               ).map(([id, label]) => (
                 <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
@@ -356,7 +360,7 @@ export function App() {
             </div>
             <input
               className="search"
-              placeholder="Search item, station, trader…"
+              placeholder={tab === "items" ? "Search items by name…" : "Search item, station, trader…"}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -420,7 +424,7 @@ export function App() {
                 </button>
               ))}
             </div>
-          ) : (
+          ) : tab === "barters" || tab === "flips" ? (
             <div className="chips">
               <button type="button" className={!traderChip ? "active" : ""} onClick={() => setTraderChip("")}>
                 All traders
@@ -449,8 +453,17 @@ export function App() {
                 </button>
               ))}
             </div>
-          )}
+          ) : null}
 
+          {tab === "items" && blob ? (
+            <ItemLookup
+              blob={blob}
+              settings={settings}
+              search={search}
+              selectedItemId={selectedItemId}
+              onSelectItem={setSelectedItemId}
+            />
+          ) : null}
           {tab === "crafts" ? (
             <ProfitTable
               key={`crafts-${resetNonce}`}

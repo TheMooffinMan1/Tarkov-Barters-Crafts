@@ -8,9 +8,9 @@ import {
   isTool,
   titleCaseNormalized,
   consumableKind,
-  FUEL_ITEM_IDS,
-  PHYSICAL_BITCOIN_ID,
 } from "./util.mjs";
+
+const QUEST_OBJECTIVE_TYPES = new Set(["giveItem", "findItem", "plantItem", "sellItem", "useItem"]);
 
 function contained(entry) {
   if (!entry) return null;
@@ -33,23 +33,34 @@ function itemUsesDurability(raw, types) {
   return false;
 }
 
+function itemSearchHay(name, shortName) {
+  return [name, shortName]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
+
 function slimItem(raw, locale = {}) {
   if (!raw) return null;
   const id = raw.id;
   if (!id) return null;
   const types = Array.isArray(raw.types) ? raw.types : [];
   const name = (locale[raw.name] ?? raw.name) || id;
+  const shortName = (locale[raw.shortName] ?? raw.shortName) || name;
   const props = raw.properties || {};
   const units = Number(props.units ?? props.maxResource) || 0;
   const kind = consumableKind(id);
   return {
     id,
     name,
-    shortName: (locale[raw.shortName] ?? raw.shortName) || name,
+    shortName,
     iconLink: raw.iconLink || `https://assets.tarkov.dev/${id}-icon.webp`,
     basePrice: Number(raw.basePrice) || 0,
     lastLowPrice: Number(raw.lastLowPrice) || 0,
     avg24hPrice: Number(raw.avg24hPrice) || 0,
+    width: Number(raw.width) || 0,
+    height: Number(raw.height) || 0,
     noFlea: types.includes("noFlea") || raw.noFlea === true,
     usesDurability: itemUsesDurability(raw, types),
     minLevelForFlea: Number(raw.minLevelForFlea) || 0,
@@ -57,6 +68,7 @@ function slimItem(raw, locale = {}) {
     resourceUnits: kind ? units || 100 : 0,
     buyFromTrader: slimOffers(raw.buyFromTrader),
     sellToTrader: slimOffers(raw.sellToTrader),
+    search: itemSearchHay(name, shortName),
   };
 }
 
@@ -76,20 +88,6 @@ function slimOffers(offers) {
       buyLimit: offer.buyLimit ?? null,
     }))
     .filter((offer) => offer.traderId && offer.priceRUB > 0);
-}
-
-function collectRecipeItemIds(crafts, barters) {
-  const ids = [];
-  for (const craft of crafts) {
-    for (const row of craft.inputs) ids.push(row.id);
-    if (craft.output) ids.push(craft.output.id);
-    for (const qid of craft.requiredQuestItems) ids.push(qid);
-  }
-  for (const barter of barters) {
-    for (const row of barter.inputs) ids.push(row.id);
-    if (barter.output) ids.push(barter.output.id);
-  }
-  return unique(ids);
 }
 
 function normalizeCraft(raw) {
@@ -202,6 +200,89 @@ function buildFlips(itemMap) {
   return flips;
 }
 
+function ensureItemRef(refs, itemId) {
+  if (!refs[itemId]) refs[itemId] = { hideout: [], quests: [] };
+  return refs[itemId];
+}
+
+function stationDisplayName(station) {
+  return station.name || titleCaseNormalized(station.normalizedName) || station.id;
+}
+
+function buildHideoutRefs(hideout) {
+  const refs = {};
+  for (const [stationId, station] of Object.entries(asMap(hideout))) {
+    const stationName = stationDisplayName(station);
+    for (const levelRow of asArray(station.levels)) {
+      const level = Number(levelRow.level) || 0;
+      if (!level) continue;
+      for (const req of asArray(levelRow.itemRequirements)) {
+        const itemId = typeof req.item === "string" ? req.item : req.item?.id;
+        if (!itemId) continue;
+        ensureItemRef(refs, itemId).hideout.push({
+          stationId,
+          stationName,
+          level,
+          count: Number(req.count) || 1,
+          foundInRaid: req.attributes?.foundInRaid === true,
+        });
+      }
+    }
+  }
+  return refs;
+}
+
+function objectiveItemIds(objective) {
+  if (objective.type === "useItem") return asArray(objective.useAny).filter(Boolean);
+  return asArray(objective.items).filter(Boolean);
+}
+
+function buildQuestRefs(tasks, traders) {
+  const refs = {};
+  const traderMap = asMap(traders);
+  for (const task of Object.values(tasksMap(tasks))) {
+    if (!task?.id) continue;
+    const traderId = task.trader || task.traderId || null;
+    const traderName = traderId
+      ? traderMap[traderId]?.name || titleCaseNormalized(traderMap[traderId]?.normalizedName) || traderId
+      : null;
+    for (const objective of asArray(task.objectives)) {
+      if (!QUEST_OBJECTIVE_TYPES.has(objective.type)) continue;
+      const itemIds = objectiveItemIds(objective);
+      if (!itemIds.length) continue;
+      const count = Number(objective.count) || 1;
+      const foundInRaid = objective.foundInRaid === true;
+      for (const itemId of itemIds) {
+        ensureItemRef(refs, itemId).quests.push({
+          taskId: task.id,
+          taskName: task.name || task.id,
+          traderName,
+          type: objective.type,
+          count,
+          foundInRaid,
+        });
+      }
+    }
+  }
+  return refs;
+}
+
+function mergeItemRefs(...maps) {
+  const merged = {};
+  for (const map of maps) {
+    for (const [itemId, entry] of Object.entries(map || {})) {
+      const target = ensureItemRef(merged, itemId);
+      target.hideout.push(...(entry.hideout || []));
+      target.quests.push(...(entry.quests || []));
+    }
+  }
+  for (const itemId of Object.keys(merged)) {
+    const entry = merged[itemId];
+    if (!entry.hideout.length && !entry.quests.length) delete merged[itemId];
+  }
+  return merged;
+}
+
 function collectUnlockTaskIds(crafts, barters, flips, itemMap) {
   const ids = [];
   for (const row of crafts) if (row.taskUnlock) ids.push(row.taskUnlock);
@@ -227,19 +308,16 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
   const craftRows = asArray(unwrapIfNeeded(crafts)).map(normalizeCraft).filter(Boolean);
   const barterRows = asArray(unwrapIfNeeded(barters)).map(normalizeBarter).filter(Boolean);
 
-  const recipeIds = new Set(collectRecipeItemIds(craftRows, barterRows));
   const itemMap = {};
 
   for (const [id, raw] of Object.entries(rawItems)) {
-    const hasCashBuy = asArray(raw?.buyFromTrader).some((o) => Number(o.priceRUB ?? o.price) > 0);
-    const forceKeep = FUEL_ITEM_IDS.includes(id) || Boolean(consumableKind(id)) || id === PHYSICAL_BITCOIN_ID;
-    if (!recipeIds.has(id) && !hasCashBuy && !forceKeep) continue;
     const slim = slimItem(raw, locale);
     if (slim) itemMap[id] = slim;
   }
 
   const flips = buildFlips(itemMap);
   const meta = metaFrom(itemDoc, traders, hideout, craftRows, barterRows, itemMap);
+  const itemRefs = mergeItemRefs(buildHideoutRefs(hideout), buildQuestRefs(tasks, traders));
   const taskSource = tasksMap(tasks);
   const unlockIds = collectUnlockTaskIds(craftRows, barterRows, flips, itemMap);
   const unlockTasks = unlockIds.map((id) => {
@@ -281,6 +359,7 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
     barters: barterRows,
     flips,
     unlockTasks,
+    itemRefs,
   };
 }
 

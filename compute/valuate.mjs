@@ -1,4 +1,3 @@
-import { fleaMarketFee } from "./flea-fee.mjs";
 import { DEFAULT_SETTINGS } from "./settings.mjs";
 import {
   MIN_CRAFT_SECONDS,
@@ -9,11 +8,11 @@ import {
   hideoutConsumptionMultiplier,
   bitcoinPerHour,
 } from "./util.mjs";
-import { canUseFlea } from "./progress.mjs";
-
-function itemOf(blob, id) {
-  return blob.items[id] || null;
-}
+import {
+  fleaBuyPrice,
+  itemOf,
+  outputSale,
+} from "./pricing.mjs";
 
 /** unlockTasks is scanned once per blob instead of per row. */
 const unlockTaskIndexCache = new WeakMap();
@@ -28,23 +27,6 @@ function unlockTaskById(blob, id) {
   return index.get(id) || null;
 }
 
-function fleaSpotPrice(item, settings) {
-  if (settings.useFleaAvg) {
-    return Number(item.avg24hPrice) || Number(item.lastLowPrice) || 0;
-  }
-  return Number(item.lastLowPrice) || Number(item.avg24hPrice) || 0;
-}
-
-function fleaBuyPrice(item, settings, blob) {
-  if (!canUseFlea(item, blob, settings)) return 0;
-  return fleaSpotPrice(item, settings);
-}
-
-function fleaSellPrice(item, settings, blob) {
-  if (!canUseFlea(item, blob, settings)) return 0;
-  return fleaSpotPrice(item, settings);
-}
-
 function traderBuyPrice(item, settings) {
   if (!item) return 0;
   let best = 0;
@@ -57,29 +39,6 @@ function traderBuyPrice(item, settings) {
     if (!best || offer.priceRUB < best) best = offer.priceRUB;
   }
   return best;
-}
-
-function bestTraderSell(item, settings, excludeTraderId) {
-  let best = { priceRUB: 0, traderId: null, traderName: null };
-  if (!item) return best;
-  for (const offer of item.sellToTrader || []) {
-    if (excludeTraderId && offer.traderId === excludeTraderId) continue;
-    if (settings.filterToProgress) {
-      const loyalty = settings.traderLevels[offer.traderId] ?? 4;
-      if (loyalty < 1) continue;
-    }
-    if (offer.priceRUB > best.priceRUB) {
-      best = { priceRUB: offer.priceRUB, traderId: offer.traderId };
-    }
-  }
-  if (best.traderId) {
-    best.traderName = blobTraderName(item, best.traderId, settings._traders);
-  }
-  return best;
-}
-
-function blobTraderName(_item, traderId, traders) {
-  return traders?.[traderId]?.name || traderId;
 }
 
 function canPurchase(item, settings, blob) {
@@ -364,70 +323,6 @@ function bitcoinIncomePerHour(blob, settings) {
   return bitcoinPerHour(gpus) * sell;
 }
 
-function outputSale(item, settings, blob, count, excludeTraderId) {
-  const traders = blob.meta.traders;
-  const fleaPrice = fleaSellPrice(item, settings, blob);
-  const trader = bestTraderSell(item, { ...settings, _traders: traders }, excludeTraderId);
-  trader.traderName = traders[trader.traderId]?.name || trader.traderName;
-
-  let fleaFee = 0;
-  let fleaNet = 0;
-  const canFlea = fleaPrice > 0;
-
-  if (canFlea) {
-    fleaFee = settings.includeFleaFee
-      ? fleaMarketFee(item.basePrice, fleaPrice, {
-          count,
-          intelligenceCenter: settings.intelligenceCenter,
-          hideoutManagement: settings.hideoutManagement,
-          Ti: blob.meta.flea.sellOfferFeeRate,
-          Tr: blob.meta.flea.sellRequirementFeeRate,
-        })
-      : 0;
-    fleaNet = fleaPrice * count - fleaFee;
-  }
-
-  const traderNet = trader.priceRUB * count;
-
-  const fleaOption = canFlea
-    ? {
-        sellTo: blob.meta.flea.name,
-        sellToId: "flea-market",
-        sellSource: "flea",
-        gross: fleaPrice,
-        fee: fleaFee,
-        net: fleaNet,
-      }
-    : null;
-  const traderOption =
-    trader.priceRUB > 0
-      ? {
-          sellTo: trader.traderName,
-          sellToId: trader.traderId,
-          sellSource: "trader",
-          gross: trader.priceRUB,
-          fee: 0,
-          net: traderNet,
-        }
-      : null;
-
-  switch (settings.outputValue) {
-    case "flea":
-      return fleaOption || traderOption || emptySale();
-    case "trader":
-      return traderOption || fleaOption || emptySale();
-    case "best":
-    default: {
-      if (fleaOption && traderOption) return fleaOption.net >= traderOption.net ? fleaOption : traderOption;
-      return fleaOption || traderOption || emptySale();
-    }
-  }
-}
-
-function emptySale() {
-  return { sellTo: "—", sellToId: null, sellSource: "none", gross: 0, fee: 0, net: 0 };
-}
-
 function canSell(sale) {
   return Boolean(sale && sale.sellToId);
 }
@@ -490,6 +385,8 @@ function valuateFleaToTrader(blob, settings) {
   const flips = [];
   for (const item of Object.values(blob.items || {})) {
     if (item.usesDurability) continue;
+    if (!Number(item.lastLowPrice) && !Number(item.avg24hPrice)) continue;
+    if (!item.sellToTrader?.length) continue;
     const fleaCost = fleaBuyPrice(item, settings, blob);
     if (fleaCost <= 0) continue;
     for (const offer of item.sellToTrader || []) {
