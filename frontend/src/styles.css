@@ -472,21 +472,24 @@ tr.station-break td {
 .lookup-page--search {
   justify-content: flex-start;
   align-items: center;
-  padding: 16px 0 48px;
+  padding: 0 0 48px;
+  margin-top: -4px;
 }
 .lookup-page--detail {
   width: 100%;
   gap: 28px;
 }
 .lookup-search-stage {
-  width: min(100%, 520px);
+  width: min(100%, 340px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  align-items: center;
+  text-align: center;
 }
 .lookup-search-label {
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
   font-weight: 650;
@@ -501,10 +504,15 @@ tr.station-break td {
   font: inherit;
 }
 .lookup-search--hero {
-  padding: 14px 16px;
-  font-size: 17px;
+  padding: 9px 12px;
+  font-size: 14px;
   border-radius: 6px;
-  border-width: 2px;
+  border-width: 1px;
+}
+.lookup-page--search .lookup-empty {
+  max-width: 300px;
+  font-size: 13px;
+  line-height: 1.45;
 }
 .lookup-search-anchor {
   position: relative;
