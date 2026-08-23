@@ -827,6 +827,12 @@ tr.station-break td {
   flex-direction: column;
   gap: 2px;
 }
+.lookup-quest-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
 .lookup-quest-name {
   font-weight: 600;
   line-height: 1.3;
@@ -845,7 +851,8 @@ tr.station-break td {
   .page-switch { grid-template-columns: 1fr; }
 }
 .badge-fir,
-.badge-locked {
+.badge-locked,
+.badge-category {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
@@ -859,6 +866,13 @@ tr.station-break td {
   color: #f5d76e;
   background: rgba(245, 215, 110, 0.12);
   border: 1px solid rgba(245, 215, 110, 0.35);
+}
+.badge-category {
+  color: var(--gold);
+  background: rgba(199, 163, 90, 0.12);
+  border: 1px solid rgba(199, 163, 90, 0.35);
+  text-transform: none;
+  letter-spacing: 0.01em;
 }
 .badge-locked {
   color: var(--muted);

@@ -366,11 +366,15 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
                       </span>
                     ) : null}
                     <span className="lookup-quest-copy">
-                      <span className="lookup-quest-name">{row.taskName}</span>
+                      <span className="lookup-quest-name-row">
+                        <span className="lookup-quest-name">{row.taskName}</span>
+                        {row.categoryName ? (
+                          <span className="badge-category">Any {row.categoryName}</span>
+                        ) : null}
+                      </span>
                       <span className="lookup-quest-detail">
                         {row.traderName ? `${row.traderName} · ` : ""}
-                        {QUEST_TYPE_LABEL[row.type] || row.type}
-                        {row.categoryName ? ` any ${row.categoryName}` : ""} ×{formatQty(row.count)}
+                        {QUEST_TYPE_LABEL[row.type] || row.type} ×{formatQty(row.count)}
                       </span>
                     </span>
                     {row.foundInRaid ? <span className="badge-fir">FIR</span> : null}
