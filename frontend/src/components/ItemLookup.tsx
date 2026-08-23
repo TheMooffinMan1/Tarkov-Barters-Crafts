@@ -1,8 +1,7 @@
 import { useMemo } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { lookupItem, type ProfitBlob, type Settings } from "@compute/index.mjs";
 import { formatQty, formatRoubles } from "../lib/format";
-import { ItemStack } from "./ItemStack";
 import { HoverTip } from "./HoverTip";
 
 type SlimItem = {
@@ -38,6 +37,92 @@ function normalizeQuery(search: string) {
   return search.trim().toLowerCase().replace(/\s+/g, "");
 }
 
+function SuggestionDropdown({
+  suggestions,
+  query,
+  onSelect,
+}: {
+  suggestions: SlimItem[];
+  query: string;
+  onSelect: (itemId: string) => void;
+}) {
+  if (!query) return null;
+
+  return (
+    <div className="lookup-search-dropdown" role="presentation">
+      {suggestions.length ? (
+        <ul className="lookup-suggestions" role="listbox">
+          {suggestions.map((item) => (
+            <li key={item.id}>
+              <button type="button" className="lookup-suggestion" onClick={() => onSelect(item.id)}>
+                {item.iconLink ? (
+                  <img
+                    className="lookup-suggestion-icon"
+                    src={item.iconLink}
+                    alt=""
+                    width={28}
+                    height={28}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <span className="lookup-suggestion-icon lookup-suggestion-icon--fallback" />
+                )}
+                <span className="lookup-suggestion-copy">
+                  <span className="lookup-suggestion-name">{item.name}</span>
+                  {item.shortName !== item.name ? (
+                    <span className="lookup-suggestion-short">{item.shortName}</span>
+                  ) : null}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="lookup-dropdown-empty">No items match that search.</p>
+      )}
+    </div>
+  );
+}
+
+function SearchField({
+  id,
+  className,
+  placeholder,
+  value,
+  onChange,
+  onSubmit,
+  dropdown,
+  autoFocus,
+}: {
+  id?: string;
+  className?: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (event: FormEvent) => void;
+  dropdown: ReactNode;
+  autoFocus?: boolean;
+}) {
+  return (
+    <div className="lookup-search-anchor">
+      <form onSubmit={onSubmit}>
+        <input
+          id={id}
+          className={className || "lookup-search"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          autoFocus={autoFocus}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </form>
+      {dropdown}
+    </div>
+  );
+}
+
 export function ItemLookup({ blob, settings, search, onSearchChange, selectedItemId, onSelectItem }: Props) {
   const query = normalizeQuery(search);
 
@@ -50,17 +135,7 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
   }, [blob.items, query]);
 
   const hasPinnedItem = Boolean(selectedItemId && blob.items[selectedItemId]);
-
-  const displayItemId = hasPinnedItem
-    ? selectedItemId
-    : query && suggestions.length === 1
-      ? suggestions[0].id
-      : "";
-
-  const isDetailView = Boolean(displayItemId);
-  const awaitingPick = Boolean(!hasPinnedItem && query && suggestions.length > 1);
-  const showDetailDropdown = Boolean(hasPinnedItem && query);
-  const detail = displayItemId ? lookupItem(blob, displayItemId, settings) : null;
+  const detail = hasPinnedItem ? lookupItem(blob, selectedItemId, settings) : null;
   const bestTraderPrice = detail?.traderSell[0]?.priceRUB ?? 0;
 
   function selectItem(itemId: string) {
@@ -78,7 +153,11 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
     onSearchChange("");
   }
 
-  if (isDetailView && detail) {
+  const suggestionDropdown = (
+    <SuggestionDropdown suggestions={suggestions} query={query} onSelect={selectItem} />
+  );
+
+  if (hasPinnedItem && detail) {
     const slotLabel =
       detail.item.width && detail.item.height
         ? `${detail.item.width}×${detail.item.height} · ${detail.slots} slot${detail.slots === 1 ? "" : "s"}`
@@ -90,35 +169,14 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
           <button type="button" className="lookup-back" onClick={handleBack}>
             ← Search
           </button>
-          <form className="lookup-detail-search" onSubmit={handleSubmit}>
-            <input
-              className="lookup-search"
-              placeholder="Search another item…"
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-            />
-            {showDetailDropdown ? (
-              <div className="lookup-search-dropdown">
-                {suggestions.length ? (
-                  <ul className="lookup-suggestions" role="listbox">
-                    {suggestions.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          className="lookup-suggestion"
-                          onClick={() => selectItem(item.id)}
-                        >
-                          <ItemStack name={item.name} shortName={item.shortName} iconLink={item.iconLink} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="lookup-dropdown-empty">No items match that search.</p>
-                )}
-              </div>
-            ) : null}
-          </form>
+          <SearchField
+            className="lookup-search"
+            placeholder="Search another item…"
+            value={search}
+            onChange={onSearchChange}
+            onSubmit={handleSubmit}
+            dropdown={suggestionDropdown}
+          />
         </header>
 
         <div className="lookup-hero">
@@ -269,40 +327,27 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
 
   return (
     <div className="lookup-page lookup-page--search">
-      <form className="lookup-search-stage" onSubmit={handleSubmit}>
+      <div className="lookup-search-stage">
         <label className="lookup-search-label" htmlFor="item-lookup-search">
           Find an item
         </label>
-        <input
+        <SearchField
           id="item-lookup-search"
           className="lookup-search lookup-search--hero"
           placeholder="Search by item name…"
           value={search}
-          onChange={(event) => {
-            onSearchChange(event.target.value);
+          onChange={(value) => {
+            onSearchChange(value);
             onSelectItem("");
           }}
+          onSubmit={handleSubmit}
+          dropdown={suggestionDropdown}
           autoFocus
         />
-        {awaitingPick ? (
-          <ul className="lookup-suggestions" role="listbox">
-            {suggestions.map((item) => (
-              <li key={item.id}>
-                <button type="button" className="lookup-suggestion" onClick={() => selectItem(item.id)}>
-                  <ItemStack name={item.name} shortName={item.shortName} iconLink={item.iconLink} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
         {!query ? (
           <p className="lookup-empty">Search for trader prices, flea value, and hideout or quest requirements.</p>
-        ) : !suggestions.length ? (
-          <p className="lookup-empty">No items match that search.</p>
-        ) : awaitingPick ? (
-          <p className="lookup-hint">{suggestions.length} matches — pick one or press Enter for the first.</p>
         ) : null}
-      </form>
+      </div>
     </div>
   );
 }
