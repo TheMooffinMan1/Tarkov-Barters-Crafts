@@ -59,7 +59,10 @@ export function lookupItem(blob, itemId, userSettings = {}) {
     traderSell,
     refs: {
       hideout: refs.hideout || [],
-      quests: refs.quests || [],
+      quests: (refs.quests || []).map((row) => ({
+        ...row,
+        traderImageLink: row.traderId ? traders[row.traderId]?.imageLink || null : null,
+      })),
     },
   };
 }

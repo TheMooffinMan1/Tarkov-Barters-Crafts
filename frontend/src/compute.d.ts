@@ -66,7 +66,7 @@ declare module "@compute/index.mjs" {
     name: string;
     shortName: string;
     iconLink?: string;
-    basePrice: number;
+    gridImageLink?: string;
     lastLowPrice: number;
     avg24hPrice: number;
     width: number;
@@ -100,7 +100,10 @@ declare module "@compute/index.mjs" {
   export interface QuestRef {
     taskId: string;
     taskName: string;
+    traderId?: string | null;
     traderName: string | null;
+    traderLevel?: number;
+    traderImageLink?: string | null;
     type: string;
     count: number;
     foundInRaid: boolean;
@@ -147,6 +150,7 @@ declare module "@compute/index.mjs" {
           id: string;
           name: string;
           normalizedName: string;
+          imageLink?: string | null;
           levels: { level: number; requiredPlayerLevel: number }[];
         }
       >;

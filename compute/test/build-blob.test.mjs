@@ -85,6 +85,6 @@ test("itemRefs index hideout and quest requirements", () => {
   assert.equal(bolt.hideout.length, 1);
   assert.equal(bolt.hideout[0].foundInRaid, false);
   assert.equal(bolt.quests.length, 2);
-  assert.ok(bolt.quests.some((row) => row.taskName === "Gunsmith - Part 1" && row.type === "giveItem" && row.foundInRaid));
-  assert.ok(bolt.quests.some((row) => row.taskName === "Find bolts" && row.type === "findItem"));
+  assert.ok(bolt.quests.some((row) => row.taskName === "Gunsmith - Part 1" && row.type === "giveItem" && row.foundInRaid && row.traderLevel === 2));
+  assert.ok(bolt.quests.some((row) => row.taskName === "Find bolts" && row.type === "findItem" && row.traderId === "trader-prapor"));
 });

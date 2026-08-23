@@ -181,8 +181,15 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
 
         <div className="lookup-hero">
           <div className="lookup-hero-icon">
-            {detail.item.iconLink ? (
-              <img src={detail.item.iconLink} alt="" width={96} height={96} loading="lazy" decoding="async" />
+            {detail.item.gridImageLink || detail.item.iconLink ? (
+              <img
+                src={detail.item.gridImageLink || detail.item.iconLink}
+                alt=""
+                width={96}
+                height={96}
+                loading="lazy"
+                decoding="async"
+              />
             ) : (
               <span className="item-fallback" />
             )}
@@ -240,7 +247,7 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
                 {detail.flea.blockedReason ? (
                   <p className="lookup-blocked">{detail.flea.blockedReason}</p>
                 ) : null}
-                <p className="lookup-note">Requires PMC level {detail.flea.minPlayerLevel}</p>
+                <p className="lookup-note">Level {detail.flea.minPlayerLevel}</p>
                 <div className="lookup-flea-grid">
                   <div className="lookup-flea-stat">
                     <span className="lookup-flea-label">Last low</span>
@@ -304,13 +311,21 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
           <section className="lookup-panel">
             <h3 className="lookup-panel-title">Quest requirements</h3>
             {detail.refs.quests.length ? (
-              <ul className="lookup-ref-list">
+              <ul className="lookup-ref-list lookup-quest-list">
                 {detail.refs.quests.map((row) => (
                   <li key={`${row.taskId}:${row.type}:${row.count}:${row.foundInRaid}`}>
-                    <span>
-                      {row.taskName}
-                      {row.traderName ? ` (${row.traderName})` : ""} — {QUEST_TYPE_LABEL[row.type] || row.type} ×
-                      {formatQty(row.count)}
+                    {row.traderImageLink ? (
+                      <span className="lookup-quest-trader">
+                        <img src={row.traderImageLink} alt="" width={40} height={40} loading="lazy" decoding="async" />
+                        {row.traderLevel ? <span className="lookup-quest-ll">LL{row.traderLevel}</span> : null}
+                      </span>
+                    ) : null}
+                    <span className="lookup-quest-copy">
+                      <span className="lookup-quest-name">{row.taskName}</span>
+                      <span className="lookup-quest-detail">
+                        {row.traderName ? `${row.traderName} · ` : ""}
+                        {QUEST_TYPE_LABEL[row.type] || row.type} ×{formatQty(row.count)}
+                      </span>
                     </span>
                     {row.foundInRaid ? <span className="badge-fir">FIR</span> : null}
                   </li>

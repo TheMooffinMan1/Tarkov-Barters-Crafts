@@ -56,6 +56,7 @@ function slimItem(raw, locale = {}) {
     name,
     shortName,
     iconLink: raw.iconLink || `https://assets.tarkov.dev/${id}-icon.webp`,
+    gridImageLink: raw.gridImageLink || `https://assets.tarkov.dev/${id}-grid-image.webp`,
     basePrice: Number(raw.basePrice) || 0,
     lastLowPrice: Number(raw.lastLowPrice) || 0,
     avg24hPrice: Number(raw.avg24hPrice) || 0,
@@ -129,6 +130,20 @@ function normalizeBarter(raw) {
   };
 }
 
+function taskTraderLevel(task) {
+  let traderLevel = Number(task.minTraderLevel || task.traderLevel) || 0;
+  if (!traderLevel) {
+    for (const req of asArray(task.traderRequirements)) {
+      const value = Number(req.value ?? req.level) || 0;
+      if (value) {
+        traderLevel = value;
+        break;
+      }
+    }
+  }
+  return traderLevel || 1;
+}
+
 function metaFrom(itemDoc, traders, hideout, crafts, barters, itemMap) {
   const flea = itemDoc.fleaMarket || {};
   const usedTraderIds = new Set(barters.map((row) => row.traderId));
@@ -143,6 +158,7 @@ function metaFrom(itemDoc, traders, hideout, crafts, barters, itemMap) {
       id,
       name: trader.name || titleCaseNormalized(trader.normalizedName) || id,
       normalizedName: trader.normalizedName || id,
+      imageLink: trader.imageLink || null,
       levels: asArray(trader.levels).map((row) => ({
         level: Number(row.level) || 0,
         requiredPlayerLevel: Number(row.requiredPlayerLevel) || 0,
@@ -256,7 +272,9 @@ function buildQuestRefs(tasks, traders) {
         ensureItemRef(refs, itemId).quests.push({
           taskId: task.id,
           taskName: task.name || task.id,
+          traderId,
           traderName,
+          traderLevel: taskTraderLevel(task),
           type: objective.type,
           count,
           foundInRaid,
@@ -324,22 +342,13 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
     const task = taskSource[id] || {};
     const traderId = task.trader || task.traderId || null;
     const reqs = asArray(task.traderRequirements);
-    let traderLevel = Number(task.minTraderLevel || task.traderLevel) || 0;
-    if (!traderLevel) {
-      for (const req of reqs) {
-        const value = Number(req.value ?? req.level) || 0;
-        if (value) {
-          traderLevel = value;
-          break;
-        }
-      }
-    }
-    if (!traderLevel) {
+    let traderLevel = taskTraderLevel(task);
+    if (!Number(task.minTraderLevel || task.traderLevel) && !reqs.length) {
       let min = Infinity;
       for (const row of [...barterRows, ...flips]) {
         if (row.taskUnlock === id) min = Math.min(min, row.minTraderLevel || 1);
       }
-      traderLevel = Number.isFinite(min) ? min : 1;
+      if (Number.isFinite(min)) traderLevel = min;
     }
     return {
       id,

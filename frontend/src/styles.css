@@ -656,7 +656,7 @@ tr.station-break td {
 }
 .lookup-hero-icon img {
   display: block;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 .lookup-hero-icon .item-fallback {
   width: 96px;
@@ -797,6 +797,55 @@ tr.station-break td {
 .lookup-ref-list li:last-child {
   padding-bottom: 0;
   border-bottom: none;
+}
+.lookup-quest-list li {
+  gap: 12px;
+  align-items: flex-start;
+}
+.lookup-quest-trader {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+.lookup-quest-trader img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #0a0d10;
+}
+.lookup-quest-ll {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 22px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+.lookup-quest-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lookup-quest-name {
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lookup-quest-detail {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
 }
 @media (max-width: 900px) {
   .lookup-panels { grid-template-columns: 1fr; }

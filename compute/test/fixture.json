@@ -453,19 +453,19 @@
     ]
   },
   "traders": {
-    "trader-prapor": { "id": "trader-prapor", "name": "Prapor", "normalizedName": "prapor", "levels": [
+    "trader-prapor": { "id": "trader-prapor", "name": "Prapor", "normalizedName": "prapor", "imageLink": "https://assets.tarkov.dev/54cb50c76803fa8b248b4571.webp", "levels": [
       { "level": 1, "requiredPlayerLevel": 1 },
       { "level": 2, "requiredPlayerLevel": 15 },
       { "level": 3, "requiredPlayerLevel": 26 },
       { "level": 4, "requiredPlayerLevel": 36 }
     ]},
-    "trader-therapist": { "id": "trader-therapist", "name": "Therapist", "normalizedName": "therapist", "levels": [
+    "trader-therapist": { "id": "trader-therapist", "name": "Therapist", "normalizedName": "therapist", "imageLink": "https://assets.tarkov.dev/58330581ace24524525b9830.webp", "levels": [
       { "level": 1, "requiredPlayerLevel": 1 },
       { "level": 2, "requiredPlayerLevel": 13 },
       { "level": 3, "requiredPlayerLevel": 24 },
       { "level": 4, "requiredPlayerLevel": 35 }
     ]},
-    "trader-mechanic": { "id": "trader-mechanic", "name": "Mechanic", "normalizedName": "mechanic", "levels": [
+    "trader-mechanic": { "id": "trader-mechanic", "name": "Mechanic", "normalizedName": "mechanic", "imageLink": "https://assets.tarkov.dev/5a7c2efe46aef81a7ea2338f.webp", "levels": [
       { "level": 1, "requiredPlayerLevel": 1 },
       { "level": 2, "requiredPlayerLevel": 20 },
       { "level": 3, "requiredPlayerLevel": 30 },

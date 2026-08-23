@@ -44,11 +44,14 @@ test("lookupItem sorts trader sell offers by price", () => {
   assert.equal(result.traderSell[1].priceRUB, 200000);
 });
 
-test("lookupItem passes hideout and quest refs", () => {
+test("lookupItem passes hideout and quest refs with trader images", () => {
   const data = blob();
   const result = lookupItem(data, "item-bolt", { filterToProgress: false });
   assert.equal(result.refs.hideout.length, 1);
   assert.equal(result.refs.quests.length, 2);
+  const gunsmith = result.refs.quests.find((row) => row.taskName === "Gunsmith - Part 1");
+  assert.equal(gunsmith?.traderLevel, 2);
+  assert.ok(gunsmith?.traderImageLink);
 });
 
 test("lookupItem returns null for unknown items", () => {
