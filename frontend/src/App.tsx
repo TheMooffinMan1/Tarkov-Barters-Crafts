@@ -1,4 +1,5 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { NavLink, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   DEFAULT_SETTINGS,
   GAME_MODES,
@@ -9,7 +10,8 @@ import {
   type ValuatedRow,
 } from "@compute/index.mjs";
 import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
-import { loadSettings, loadUiState, saveSettings, saveUiState, type Page, type Tab } from "./lib/settings";
+import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
+import { isItemsPath, paths } from "./lib/routes";
 import { withQuestLlSync } from "./lib/quests";
 import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
@@ -72,14 +74,47 @@ function hydrate(settings: Settings, blob: ProfitBlob): Settings {
   );
 }
 
+function ItemsRoute({
+  blob,
+  settings,
+  itemSearch,
+  onSearchChange,
+}: {
+  blob: ProfitBlob;
+  settings: Settings;
+  itemSearch: string;
+  onSearchChange: (value: string) => void;
+}) {
+  const { itemSlug = "" } = useParams();
+  const navigate = useNavigate();
+  const selectedItemId = resolveItemId(blob, itemSlug);
+
+  return (
+    <ItemLookup
+      blob={blob}
+      settings={settings}
+      search={itemSearch}
+      onSearchChange={onSearchChange}
+      selectedItemId={selectedItemId}
+      onSelectItem={(itemId) => {
+        if (!itemId) {
+          navigate(paths.items);
+          return;
+        }
+        const slug = blob.items[itemId]?.slug;
+        navigate(slug ? paths.item(slug) : paths.items);
+      }}
+    />
+  );
+}
+
 export function App() {
   const initialUi = loadUiState();
+  const location = useLocation();
   const [mode, setMode] = useState(initialUi.mode);
-  const [page, setPage] = useState<Page>(initialUi.page);
   const [tab, setTab] = useState<Tab>(initialUi.tab);
   const [search, setSearch] = useState(initialUi.search);
   const [itemSearch, setItemSearch] = useState(initialUi.itemSearch);
-  const [selectedItemId, setSelectedItemId] = useState(initialUi.selectedItemId);
   const [stationChip, setStationChip] = useState(initialUi.stationChip);
   const [traderChip, setTraderChip] = useState(initialUi.traderChip);
   const [traderLevelChip, setTraderLevelChip] = useState(initialUi.traderLevelChip);
@@ -260,7 +295,21 @@ export function App() {
   const valued = { crafts, barters: recipes.barters, flips };
 
   const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
-  const isItemsPage = page === "items";
+  const isItemsPage = isItemsPath(location.pathname);
+  const routeItemId = blob ? resolveItemId(blob, slugFromPath(location.pathname)) : "";
+
+  useEffect(() => {
+    const profitTitle = "Tarkov Hideout Craft & Barter Profit Calculator | Crafts, Barters & Flips";
+    if (routeItemId && blob?.items[routeItemId]) {
+      document.title = `${blob.items[routeItemId].name} | Tarkov Item Lookup`;
+      return;
+    }
+    if (isItemsPage) {
+      document.title = "Tarkov Item Lookup | Tarkov Crafts, Barters & Flips";
+      return;
+    }
+    document.title = profitTitle;
+  }, [blob, isItemsPage, routeItemId]);
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();
@@ -296,14 +345,14 @@ export function App() {
 
       <nav className="page-nav" aria-label="Site sections">
         <div className="page-switch">
-          <button type="button" className={page === "profit" ? "active" : ""} onClick={() => setPage("profit")}>
+          <NavLink to={paths.profit} end className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="page-switch-title">Profit</span>
             <span className="page-switch-desc">Crafts, barters & flips</span>
-          </button>
-          <button type="button" className={page === "items" ? "active" : ""} onClick={() => setPage("items")}>
+          </NavLink>
+          <NavLink to={paths.items} className={() => (isItemsPage ? "active" : "")}>
             <span className="page-switch-title">Items</span>
             <span className="page-switch-desc">Prices & requirements</span>
-          </button>
+          </NavLink>
         </div>
       </nav>
 
@@ -350,173 +399,183 @@ export function App() {
         ) : null}
       </div>
 
-      {isItemsPage ? (
-        blob ? (
-          <ItemLookup
-            blob={blob}
-            settings={settings}
-            search={itemSearch}
-            onSearchChange={setItemSearch}
-            selectedItemId={selectedItemId}
-            onSelectItem={setSelectedItemId}
-          />
-        ) : null
-      ) : (
-      <div className="layout">
-        {blob ? (
-          <SettingsPanel blob={blob} settings={settings} onChange={setSettings} onReset={resetToDefaults} />
-        ) : (
-          <aside className="settings" />
-        )}
+      <Routes>
+        <Route
+          path={paths.items}
+          element={
+            blob ? (
+              <ItemsRoute blob={blob} settings={settings} itemSearch={itemSearch} onSearchChange={setItemSearch} />
+            ) : null
+          }
+        />
+        <Route
+          path={`${paths.items}/:itemSlug`}
+          element={
+            blob ? (
+              <ItemsRoute blob={blob} settings={settings} itemSearch={itemSearch} onSearchChange={setItemSearch} />
+            ) : null
+          }
+        />
+        <Route
+          path={paths.profit}
+          element={
+            <div className="layout">
+              {blob ? (
+                <SettingsPanel blob={blob} settings={settings} onChange={setSettings} onReset={resetToDefaults} />
+              ) : (
+                <aside className="settings" />
+              )}
 
-        <main>
-          <div className="tab-bar">
-            <div className="segmented">
-              {(
-                [
-                  ["crafts", `Crafts (${valued.crafts.length})`],
-                  ["barters", `Barters (${valued.barters.length})`],
-                  ["flips", `Flips (${valued.flips.length})`],
-                ] as const
-              ).map(([id, label]) => (
-                <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="toolbar">
-            <input
-              className="search"
-              placeholder="Search item, station, trader…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {tab === "crafts" || tab === "barters" ? (
-              <label className="check toolbar-check">
-                <input
-                  type="checkbox"
-                  checked={settings.hideUnpurchasable}
-                  onChange={(e) => setSettings({ ...settings, hideUnpurchasable: e.target.checked })}
-                />
-                Hide if an input cannot be bought (Excludes returned tools)
-              </label>
-            ) : null}
-            {tab === "crafts" ? (
-              <label className="check toolbar-check">
-                <input
-                  type="checkbox"
-                  checked={Boolean(settings.bestTwoCraftsPerStation)}
-                  onChange={(e) => setSettings({ ...settings, bestTwoCraftsPerStation: e.target.checked })}
-                />
-                Show best 2 crafts for each station
-              </label>
-            ) : null}
-            {tab === "flips" ? (
-              <div className="segmented">
-                <button
-                  type="button"
-                  className={settings.flipDirection !== "fleaToTrader" ? "active" : ""}
-                  onClick={() =>
-                    startTransition(() => setSettings({ ...settings, flipDirection: "traderToFlea" }))
-                  }
-                >
-                  Trader buy → Flea sell
-                </button>
-                <button
-                  type="button"
-                  className={settings.flipDirection === "fleaToTrader" ? "active" : ""}
-                  onClick={() =>
-                    startTransition(() => setSettings({ ...settings, flipDirection: "fleaToTrader" }))
-                  }
-                >
-                  Flea buy → Trader sell
-                </button>
-              </div>
-            ) : null}
-          </div>
+              <main>
+                <div className="tab-bar">
+                  <div className="segmented">
+                    {(
+                      [
+                        ["crafts", `Crafts (${valued.crafts.length})`],
+                        ["barters", `Barters (${valued.barters.length})`],
+                        ["flips", `Flips (${valued.flips.length})`],
+                      ] as const
+                    ).map(([id, label]) => (
+                      <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="toolbar">
+                  <input
+                    className="search"
+                    placeholder="Search item, station, trader…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  {tab === "crafts" || tab === "barters" ? (
+                    <label className="check toolbar-check">
+                      <input
+                        type="checkbox"
+                        checked={settings.hideUnpurchasable}
+                        onChange={(e) => setSettings({ ...settings, hideUnpurchasable: e.target.checked })}
+                      />
+                      Hide if an input cannot be bought (Excludes returned tools)
+                    </label>
+                  ) : null}
+                  {tab === "crafts" ? (
+                    <label className="check toolbar-check">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(settings.bestTwoCraftsPerStation)}
+                        onChange={(e) => setSettings({ ...settings, bestTwoCraftsPerStation: e.target.checked })}
+                      />
+                      Show best 2 crafts for each station
+                    </label>
+                  ) : null}
+                  {tab === "flips" ? (
+                    <div className="segmented">
+                      <button
+                        type="button"
+                        className={settings.flipDirection !== "fleaToTrader" ? "active" : ""}
+                        onClick={() =>
+                          startTransition(() => setSettings({ ...settings, flipDirection: "traderToFlea" }))
+                        }
+                      >
+                        Trader buy → Flea sell
+                      </button>
+                      <button
+                        type="button"
+                        className={settings.flipDirection === "fleaToTrader" ? "active" : ""}
+                        onClick={() =>
+                          startTransition(() => setSettings({ ...settings, flipDirection: "fleaToTrader" }))
+                        }
+                      >
+                        Flea buy → Trader sell
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
 
-          {tab === "crafts" ? (
-            <div className="chips">
-              <button type="button" className={!stationChip ? "active" : ""} onClick={() => setStationChip("")}>
-                All stations
-              </button>
-              {stations.map((station) => (
-                <button
-                  key={station.id}
-                  type="button"
-                  className={stationChip === station.id ? "active" : ""}
-                  onClick={() => setStationChip(station.id)}
-                >
-                  {station.name}
-                </button>
-              ))}
-            </div>
-          ) : tab === "barters" || tab === "flips" ? (
-            <div className="chips">
-              <button type="button" className={!traderChip ? "active" : ""} onClick={() => setTraderChip("")}>
-                All traders
-              </button>
-              {traders.map((trader) => (
-                <button
-                  key={trader.id}
-                  type="button"
-                  className={traderChip === trader.id ? "active" : ""}
-                  onClick={() => setTraderChip(trader.id)}
-                >
-                  {trader.name}
-                </button>
-              ))}
-              <button type="button" className={!traderLevelChip ? "active" : ""} onClick={() => setTraderLevelChip(0)}>
-                All LL
-              </button>
-              {[1, 2, 3, 4].map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  className={traderLevelChip === level ? "active" : ""}
-                  onClick={() => setTraderLevelChip(level)}
-                >
-                  LL{level}
-                </button>
-              ))}
-            </div>
-          ) : null}
+                {tab === "crafts" ? (
+                  <div className="chips">
+                    <button type="button" className={!stationChip ? "active" : ""} onClick={() => setStationChip("")}>
+                      All stations
+                    </button>
+                    {stations.map((station) => (
+                      <button
+                        key={station.id}
+                        type="button"
+                        className={stationChip === station.id ? "active" : ""}
+                        onClick={() => setStationChip(station.id)}
+                      >
+                        {station.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : tab === "barters" || tab === "flips" ? (
+                  <div className="chips">
+                    <button type="button" className={!traderChip ? "active" : ""} onClick={() => setTraderChip("")}>
+                      All traders
+                    </button>
+                    {traders.map((trader) => (
+                      <button
+                        key={trader.id}
+                        type="button"
+                        className={traderChip === trader.id ? "active" : ""}
+                        onClick={() => setTraderChip(trader.id)}
+                      >
+                        {trader.name}
+                      </button>
+                    ))}
+                    <button type="button" className={!traderLevelChip ? "active" : ""} onClick={() => setTraderLevelChip(0)}>
+                      All LL
+                    </button>
+                    {[1, 2, 3, 4].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        className={traderLevelChip === level ? "active" : ""}
+                        onClick={() => setTraderLevelChip(level)}
+                      >
+                        LL{level}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
 
-          {tab === "crafts" ? (
-            <ProfitTable
-              key={`crafts-${resetNonce}`}
-              kind="crafts"
-              rows={valued.crafts}
-              search={search}
-              hideUnprofitable={settings.hideUnprofitable}
-              onHideQuest={hideQuest}
-              groupByStation={Boolean(settings.bestTwoCraftsPerStation)}
-            />
-          ) : null}
-          {tab === "barters" ? (
-            <ProfitTable
-              key={`barters-${resetNonce}`}
-              kind="barters"
-              rows={valued.barters}
-              search={search}
-              hideUnprofitable={settings.hideUnprofitable}
-              onHideQuest={hideQuest}
-            />
-          ) : null}
-          {tab === "flips" ? (
-            <ProfitTable
-              key={`flips-${resetNonce}`}
-              kind="flips"
-              rows={valued.flips}
-              search={search}
-              hideUnprofitable={settings.hideUnprofitable}
-              onHideQuest={hideQuest}
-            />
-          ) : null}
-        </main>
-      </div>
-      )}
+                {tab === "crafts" ? (
+                  <ProfitTable
+                    key={`crafts-${resetNonce}`}
+                    kind="crafts"
+                    rows={valued.crafts}
+                    search={search}
+                    hideUnprofitable={settings.hideUnprofitable}
+                    onHideQuest={hideQuest}
+                    groupByStation={Boolean(settings.bestTwoCraftsPerStation)}
+                  />
+                ) : null}
+                {tab === "barters" ? (
+                  <ProfitTable
+                    key={`barters-${resetNonce}`}
+                    kind="barters"
+                    rows={valued.barters}
+                    search={search}
+                    hideUnprofitable={settings.hideUnprofitable}
+                    onHideQuest={hideQuest}
+                  />
+                ) : null}
+                {tab === "flips" ? (
+                  <ProfitTable
+                    key={`flips-${resetNonce}`}
+                    kind="flips"
+                    rows={valued.flips}
+                    search={search}
+                    hideUnprofitable={settings.hideUnprofitable}
+                    onHideQuest={hideQuest}
+                  />
+                ) : null}
+              </main>
+            </div>
+          }
+        />
+      </Routes>
 
       <footer>
         Price data from{" "}

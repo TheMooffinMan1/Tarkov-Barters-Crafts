@@ -470,7 +470,14 @@
       { "level": 2, "requiredPlayerLevel": 20 },
       { "level": 3, "requiredPlayerLevel": 30 },
       { "level": 4, "requiredPlayerLevel": 40 }
-    ]}
+    ]},
+    "656f0f98d80a697f855d34b1": {
+      "id": "656f0f98d80a697f855d34b1",
+      "name": "BTR Driver",
+      "normalizedName": "btr-driver",
+      "imageLink": "https://assets.tarkov.dev/656f0f98d80a697f855d34b1.webp",
+      "levels": [{ "level": 1, "requiredPlayerLevel": 0 }]
+    }
   },
   "hideout": {
     "station-lavatory": {
@@ -535,6 +542,20 @@
         {
           "type": "findItem",
           "count": 3,
+          "foundInRaid": false,
+          "items": ["item-bolt"]
+        }
+      ]
+    },
+    "quest-btr-sample": {
+      "id": "quest-btr-sample",
+      "name": "BTR delivery",
+      "trader": "656f0f98d80a697f855d34b1",
+      "minTraderLevel": 1,
+      "objectives": [
+        {
+          "type": "giveItem",
+          "count": 1,
           "foundInRaid": false,
           "items": ["item-bolt"]
         }

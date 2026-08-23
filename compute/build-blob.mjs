@@ -8,6 +8,8 @@ import {
   isTool,
   titleCaseNormalized,
   consumableKind,
+  assignItemSlugs,
+  resolveItemId,
 } from "./util.mjs";
 
 const QUEST_OBJECTIVE_TYPES = new Set(["giveItem", "findItem", "plantItem", "sellItem", "useItem"]);
@@ -144,12 +146,16 @@ function taskTraderLevel(task) {
   return traderLevel || 1;
 }
 
-function metaFrom(itemDoc, traders, hideout, crafts, barters, itemMap) {
+function metaFrom(itemDoc, traders, hideout, crafts, barters, itemMap, tasks) {
   const flea = itemDoc.fleaMarket || {};
   const usedTraderIds = new Set(barters.map((row) => row.traderId));
   for (const item of Object.values(itemMap)) {
     for (const offer of item.buyFromTrader || []) usedTraderIds.add(offer.traderId);
     for (const offer of item.sellToTrader || []) usedTraderIds.add(offer.traderId);
+  }
+  for (const task of Object.values(tasksMap(tasks))) {
+    const traderId = task.trader || task.traderId;
+    if (traderId) usedTraderIds.add(traderId);
   }
   const traderMap = {};
   for (const [id, trader] of Object.entries(asMap(traders))) {
@@ -333,8 +339,10 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
     if (slim) itemMap[id] = slim;
   }
 
+  const itemSlugs = assignItemSlugs(itemMap);
+
   const flips = buildFlips(itemMap);
-  const meta = metaFrom(itemDoc, traders, hideout, craftRows, barterRows, itemMap);
+  const meta = metaFrom(itemDoc, traders, hideout, craftRows, barterRows, itemMap, tasks);
   const itemRefs = mergeItemRefs(buildHideoutRefs(hideout), buildQuestRefs(tasks, traders));
   const taskSource = tasksMap(tasks);
   const unlockIds = collectUnlockTaskIds(craftRows, barterRows, flips, itemMap);
@@ -369,6 +377,7 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
     flips,
     unlockTasks,
     itemRefs,
+    itemSlugs,
   };
 }
 

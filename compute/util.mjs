@@ -121,3 +121,44 @@ export function titleCaseNormalized(name) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+export function itemSlugBase(shortName, id) {
+  const base = String(shortName || id)
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return base || id;
+}
+
+/** Assign URL slugs from shortName; duplicate short names get a six-character id suffix. */
+export function assignItemSlugs(itemMap) {
+  const buckets = new Map();
+  for (const item of Object.values(itemMap)) {
+    const base = itemSlugBase(item.shortName, item.id);
+    if (!buckets.has(base)) buckets.set(base, []);
+    buckets.get(base).push(item);
+  }
+  const itemSlugs = {};
+  for (const [base, items] of buckets) {
+    if (items.length === 1) {
+      items[0].slug = base;
+      itemSlugs[base] = items[0].id;
+      continue;
+    }
+    for (const item of items) {
+      const slug = `${base}-${item.id.slice(-6)}`;
+      item.slug = slug;
+      itemSlugs[slug] = item.id;
+    }
+  }
+  return itemSlugs;
+}
+
+export function resolveItemId(blob, slugOrId) {
+  if (!slugOrId || !blob) return "";
+  if (blob.itemSlugs?.[slugOrId]) return blob.itemSlugs[slugOrId];
+  if (blob.items?.[slugOrId]) return slugOrId;
+  return "";
+}

@@ -48,10 +48,12 @@ test("lookupItem passes hideout and quest refs with trader images", () => {
   const data = blob();
   const result = lookupItem(data, "item-bolt", { filterToProgress: false });
   assert.equal(result.refs.hideout.length, 1);
-  assert.equal(result.refs.quests.length, 2);
+  assert.equal(result.refs.quests.length, 3);
   const gunsmith = result.refs.quests.find((row) => row.taskName === "Gunsmith - Part 1");
   assert.equal(gunsmith?.traderLevel, 2);
   assert.ok(gunsmith?.traderImageLink);
+  const btr = result.refs.quests.find((row) => row.taskName === "BTR delivery");
+  assert.equal(btr?.traderImageLink, "https://assets.tarkov.dev/656f0f98d80a697f855d34b1.webp");
 });
 
 test("lookupItem returns null for unknown items", () => {

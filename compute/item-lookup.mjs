@@ -13,6 +13,11 @@ function perSlot(price, slots) {
   return slots > 0 ? price / slots : price;
 }
 
+function traderImageLink(traders, traderId) {
+  if (!traderId) return null;
+  return traders[traderId]?.imageLink || `https://assets.tarkov.dev/${traderId}.webp`;
+}
+
 export function lookupItem(blob, itemId, userSettings = {}) {
   const settings = { ...DEFAULT_SETTINGS, ...userSettings };
   const item = itemOf(blob, itemId);
@@ -61,7 +66,7 @@ export function lookupItem(blob, itemId, userSettings = {}) {
       hideout: refs.hideout || [],
       quests: (refs.quests || []).map((row) => ({
         ...row,
-        traderImageLink: row.traderId ? traders[row.traderId]?.imageLink || null : null,
+        traderImageLink: traderImageLink(traders, row.traderId),
       })),
     },
   };

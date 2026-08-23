@@ -60,11 +60,13 @@ declare module "@compute/index.mjs" {
   }
 
   export function lookupItem(blob: ProfitBlob, itemId: string, settings?: Partial<Settings>): ItemLookupResult | null;
+  export function resolveItemId(blob: ProfitBlob, slugOrId: string): string;
 
   export interface SlimItem {
     id: string;
     name: string;
     shortName: string;
+    slug?: string;
     iconLink?: string;
     gridImageLink?: string;
     lastLowPrice: number;
@@ -161,6 +163,7 @@ declare module "@compute/index.mjs" {
     barters: { traderId: string; minTraderLevel?: number; taskUnlock?: string | null }[];
     flips: { traderId: string; minTraderLevel?: number; taskUnlock?: string | null }[];
     itemRefs?: Record<string, { hideout: HideoutRef[]; quests: QuestRef[] }>;
+    itemSlugs?: Record<string, string>;
     unlockTasks: {
       id: string;
       name: string;

@@ -84,7 +84,9 @@ test("itemRefs index hideout and quest requirements", () => {
   const bolt = out.itemRefs["item-bolt"];
   assert.equal(bolt.hideout.length, 1);
   assert.equal(bolt.hideout[0].foundInRaid, false);
-  assert.equal(bolt.quests.length, 2);
+  assert.equal(bolt.quests.length, 3);
   assert.ok(bolt.quests.some((row) => row.taskName === "Gunsmith - Part 1" && row.type === "giveItem" && row.foundInRaid && row.traderLevel === 2));
   assert.ok(bolt.quests.some((row) => row.taskName === "Find bolts" && row.type === "findItem" && row.traderId === "trader-prapor"));
+  assert.ok(bolt.quests.some((row) => row.taskName === "BTR delivery" && row.traderId === "656f0f98d80a697f855d34b1"));
+  assert.ok(out.meta.traders["656f0f98d80a697f855d34b1"]?.imageLink);
 });
