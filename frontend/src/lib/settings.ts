@@ -5,10 +5,12 @@ import {
   type Settings,
 } from "@compute/index.mjs";
 
-export type Tab = "crafts" | "barters" | "flips" | "items";
+export type Tab = "crafts" | "barters" | "flips";
+export type Page = "profit" | "items";
 
 export type UiState = {
   mode: string;
+  page: Page;
   tab: Tab;
   search: string;
   itemSearch: string;
@@ -23,6 +25,7 @@ const LEGACY_MODE_KEYS = GAME_MODES.map((mode) => `tbc:${mode.id}:settings`);
 
 const DEFAULT_UI: UiState = {
   mode: "regular",
+  page: "profit",
   tab: "crafts",
   search: "",
   itemSearch: "",
@@ -95,12 +98,12 @@ export function loadUiState(): UiState {
     if (!raw) return { ...DEFAULT_UI };
     const parsed = JSON.parse(raw) as Partial<UiState>;
     const mode = GAME_MODES.some((entry) => entry.id === parsed.mode) ? parsed.mode! : DEFAULT_UI.mode;
+    const page: Page = parsed.page === "items" || parsed.tab === "items" ? "items" : "profit";
     const tab =
-      parsed.tab === "barters" || parsed.tab === "flips" || parsed.tab === "crafts" || parsed.tab === "items"
-        ? parsed.tab
-        : DEFAULT_UI.tab;
+      parsed.tab === "barters" || parsed.tab === "flips" || parsed.tab === "crafts" ? parsed.tab : DEFAULT_UI.tab;
     return {
       mode,
+      page,
       tab,
       search: typeof parsed.search === "string" ? parsed.search : "",
       itemSearch: typeof parsed.itemSearch === "string" ? parsed.itemSearch : "",

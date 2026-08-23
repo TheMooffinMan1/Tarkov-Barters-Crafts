@@ -453,8 +453,11 @@ tr.station-break td {
   background: var(--bg-elev-2);
 }
 .lookup-hint { margin: 0; font-size: 13px; }
+.page-nav {
+  margin-bottom: 20px;
+}
 .tab-bar {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .lookup-detail {
   border: 1px solid var(--line);

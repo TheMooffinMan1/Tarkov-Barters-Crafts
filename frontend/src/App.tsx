@@ -9,7 +9,7 @@ import {
   type ValuatedRow,
 } from "@compute/index.mjs";
 import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
-import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
+import { loadSettings, loadUiState, saveSettings, saveUiState, type Page, type Tab } from "./lib/settings";
 import { withQuestLlSync } from "./lib/quests";
 import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
@@ -75,6 +75,7 @@ function hydrate(settings: Settings, blob: ProfitBlob): Settings {
 export function App() {
   const initialUi = loadUiState();
   const [mode, setMode] = useState(initialUi.mode);
+  const [page, setPage] = useState<Page>(initialUi.page);
   const [tab, setTab] = useState<Tab>(initialUi.tab);
   const [search, setSearch] = useState(initialUi.search);
   const [itemSearch, setItemSearch] = useState(initialUi.itemSearch);
@@ -171,8 +172,8 @@ export function App() {
   }, [settings]);
 
   useEffect(() => {
-    saveUiState({ mode, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip });
-  }, [mode, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip]);
+    saveUiState({ mode, page, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip });
+  }, [mode, page, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip]);
 
   function resetToDefaults() {
     setSearch("");
@@ -259,7 +260,7 @@ export function App() {
   const valued = { crafts, barters: recipes.barters, flips };
 
   const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
-  const isItemsTab = tab === "items";
+  const isItemsPage = page === "items";
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();
@@ -288,10 +289,21 @@ export function App() {
       <header className="top">
         <div>
           <p className="eyebrow">Escape from Tarkov profit calculator</p>
-          <h1>Hideout crafts, barters &amp; flips</h1>
+          <h1>{isItemsPage ? "Item lookup" : "Hideout crafts, barters & flips"}</h1>
         </div>
         <ModeToggle mode={mode} onChange={setMode} />
       </header>
+
+      <nav className="page-nav" aria-label="Site sections">
+        <div className="segmented">
+          <button type="button" className={page === "profit" ? "active" : ""} onClick={() => setPage("profit")}>
+            Profit
+          </button>
+          <button type="button" className={page === "items" ? "active" : ""} onClick={() => setPage("items")}>
+            Items
+          </button>
+        </div>
+      </nav>
 
       <div className="status-row">
         {loading ? <span className="muted">Loading {GAME_MODES.find((m) => m.id === mode)?.label} prices…</span> : null}
@@ -336,24 +348,7 @@ export function App() {
         ) : null}
       </div>
 
-      <div className="tab-bar">
-        <div className="segmented">
-          {(
-            [
-              ["crafts", `Crafts (${valued.crafts.length})`],
-              ["barters", `Barters (${valued.barters.length})`],
-              ["flips", `Flips (${valued.flips.length})`],
-              ["items", "Items"],
-            ] as const
-          ).map(([id, label]) => (
-            <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {isItemsTab ? (
+      {isItemsPage ? (
         blob ? (
           <ItemLookup
             blob={blob}
@@ -373,6 +368,21 @@ export function App() {
         )}
 
         <main>
+          <div className="tab-bar">
+            <div className="segmented">
+              {(
+                [
+                  ["crafts", `Crafts (${valued.crafts.length})`],
+                  ["barters", `Barters (${valued.barters.length})`],
+                  ["flips", `Flips (${valued.flips.length})`],
+                ] as const
+              ).map(([id, label]) => (
+                <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="toolbar">
             <input
               className="search"
