@@ -10,6 +10,7 @@ import {
   consumableKind,
   assignItemSlugs,
 } from "./util.mjs";
+import { buildCategoryIndex, classifyQuestItems, objectiveItemIds } from "./quest-objectives.mjs";
 
 const QUEST_OBJECTIVE_TYPES = new Set(["giveItem", "findItem", "plantItem", "sellItem", "useItem"]);
 
@@ -260,12 +261,7 @@ function buildHideoutRefs(hideout) {
   return refs;
 }
 
-function objectiveItemIds(objective) {
-  if (objective.type === "useItem") return asArray(objective.useAny).filter(Boolean);
-  return asArray(objective.items).filter(Boolean);
-}
-
-function buildQuestRefs(tasks, traders) {
+function buildQuestRefs(tasks, traders, categoryIndex) {
   const refs = {};
   const traderMap = asMap(traders);
   for (const task of Object.values(tasksMap(tasks))) {
@@ -278,8 +274,11 @@ function buildQuestRefs(tasks, traders) {
       if (!QUEST_OBJECTIVE_TYPES.has(objective.type)) continue;
       const itemIds = objectiveItemIds(objective);
       if (!itemIds.length) continue;
+      const classified = classifyQuestItems(itemIds, categoryIndex);
+      if (classified.kind === "any") continue;
       const count = Number(objective.count) || 1;
       const foundInRaid = objective.foundInRaid === true;
+      const categoryName = classified.kind === "category" ? classified.categoryName : undefined;
       for (const itemId of itemIds) {
         ensureItemRef(refs, itemId).quests.push({
           taskId: task.id,
@@ -290,6 +289,7 @@ function buildQuestRefs(tasks, traders) {
           type: objective.type,
           count,
           foundInRaid,
+          ...(categoryName ? { categoryName } : {}),
         });
       }
     }
@@ -349,7 +349,8 @@ export function buildProfitBlob({ items, crafts, barters, traders, hideout, task
 
   const flips = buildFlips(itemMap);
   const meta = metaFrom(itemDoc, traders, hideout, craftRows, barterRows, itemMap, tasks);
-  const itemRefs = mergeItemRefs(buildHideoutRefs(hideout), buildQuestRefs(tasks, traders));
+  const categoryIndex = buildCategoryIndex(rawItems, itemDoc.itemCategories);
+  const itemRefs = mergeItemRefs(buildHideoutRefs(hideout), buildQuestRefs(tasks, traders, categoryIndex));
   const taskSource = tasksMap(tasks);
   const unlockIds = collectUnlockTaskIds(craftRows, barterRows, flips, itemMap);
   const unlockTasks = unlockIds.map((id) => {

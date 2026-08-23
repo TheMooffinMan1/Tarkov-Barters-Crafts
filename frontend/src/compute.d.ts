@@ -110,6 +110,7 @@ declare module "@compute/index.mjs" {
     type: string;
     count: number;
     foundInRaid: boolean;
+    categoryName?: string;
   }
 
   export interface ItemLookupResult {

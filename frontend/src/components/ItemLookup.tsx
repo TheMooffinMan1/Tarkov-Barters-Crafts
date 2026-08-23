@@ -9,6 +9,7 @@ type SlimItem = {
   name: string;
   shortName: string;
   iconLink?: string;
+  gridImageLink?: string;
   width?: number;
   height?: number;
   search?: string;
@@ -33,8 +34,30 @@ const QUEST_TYPE_LABEL: Record<string, string> = {
   useItem: "Use",
 };
 
-function normalizeQuery(search: string) {
-  return search.trim().toLowerCase().replace(/\s+/g, "");
+function compactText(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function suggestionRank(item: SlimItem, query: string) {
+  const shortName = compactText(item.shortName || "");
+  const name = compactText(item.name || "");
+  if (shortName === query) return 0;
+  if (shortName.startsWith(query)) return 1;
+  if (shortName.includes(query)) return 2;
+  if (name === query) return 3;
+  if (name.startsWith(query)) return 4;
+  if (name.includes(query)) return 5;
+  return 6;
+}
+
+function heroImageSize(item: { width?: number; height?: number }) {
+  const width = Math.max(1, item.width || 1);
+  const height = Math.max(1, item.height || 1);
+  const scale = 96 / Math.max(width, height);
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
 }
 
 function SuggestionDropdown({
@@ -55,16 +78,10 @@ function SuggestionDropdown({
           {suggestions.map((item) => (
             <li key={item.id}>
               <button type="button" className="lookup-suggestion" onClick={() => onSelect(item.id)}>
-                {item.iconLink ? (
-                  <img
-                    className="lookup-suggestion-icon"
-                    src={item.iconLink}
-                    alt=""
-                    width={28}
-                    height={28}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                {item.gridImageLink || item.iconLink ? (
+                  <span className="lookup-suggestion-icon">
+                    <img src={item.gridImageLink || item.iconLink} alt="" loading="lazy" decoding="async" />
+                  </span>
                 ) : (
                   <span className="lookup-suggestion-icon lookup-suggestion-icon--fallback" />
                 )}
@@ -124,13 +141,17 @@ function SearchField({
 }
 
 export function ItemLookup({ blob, settings, search, onSearchChange, selectedItemId, onSelectItem }: Props) {
-  const query = normalizeQuery(search);
+  const query = compactText(search);
 
   const suggestions = useMemo(() => {
     if (!query) return [];
     return (Object.values(blob.items) as SlimItem[])
       .filter((item) => (item.search || "").includes(query))
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => {
+        const rank = suggestionRank(a, query) - suggestionRank(b, query);
+        if (rank) return rank;
+        return a.name.localeCompare(b.name);
+      })
       .slice(0, SUGGESTION_LIMIT);
   }, [blob.items, query]);
 
@@ -185,8 +206,8 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
               <img
                 src={detail.item.gridImageLink || detail.item.iconLink}
                 alt=""
-                width={96}
-                height={96}
+                width={heroImageSize(detail.item).width}
+                height={heroImageSize(detail.item).height}
                 loading="lazy"
                 decoding="async"
               />
@@ -348,7 +369,8 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
                       <span className="lookup-quest-name">{row.taskName}</span>
                       <span className="lookup-quest-detail">
                         {row.traderName ? `${row.traderName} · ` : ""}
-                        {QUEST_TYPE_LABEL[row.type] || row.type} ×{formatQty(row.count)}
+                        {QUEST_TYPE_LABEL[row.type] || row.type}
+                        {row.categoryName ? ` any ${row.categoryName}` : ""} ×{formatQty(row.count)}
                       </span>
                     </span>
                     {row.foundInRaid ? <span className="badge-fir">FIR</span> : null}

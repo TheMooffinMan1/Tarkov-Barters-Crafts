@@ -92,6 +92,40 @@ test("itemRefs index hideout and quest requirements", () => {
   assert.ok(out.meta.traders["656f0f98d80a697f855d34b1"]?.imageLink);
 });
 
+test("category quests are labeled and any-item quests are omitted", () => {
+  const tasks = {
+    ...fixture.tasks,
+    "quest-any-item": {
+      id: "quest-any-item",
+      name: "Sell anything",
+      trader: "trader-prapor",
+      objectives: [
+        {
+          type: "sellItem",
+          count: 10,
+          items: Array.from({ length: 200 }, (_, i) => (i === 0 ? "item-bolt" : `dummy-${i}`)),
+        },
+      ],
+    },
+  };
+  const out = buildProfitBlob({
+    items: fixture.items,
+    crafts: fixture.crafts,
+    barters: fixture.barters,
+    traders: fixture.traders,
+    hideout: fixture.hideout,
+    tasks,
+  });
+  assert.equal(
+    out.itemRefs["item-bolt"].quests.some((row) => row.taskName === "Sell anything"),
+    false,
+  );
+  const water = out.itemRefs["item-water"].quests.find((row) => row.taskName === "Provisions run");
+  assert.equal(water?.categoryName, "Food");
+  assert.equal(water?.type, "giveItem");
+  assert.equal(water?.count, 5);
+});
+
 test("items get short-name slugs and a slug index", () => {
   const out = blob();
   assert.equal(out.items["item-bolt"].slug, "bolts");

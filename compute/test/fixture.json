@@ -9,6 +9,20 @@
         "name": "Flea Market",
         "normalizedName": "flea-market"
       },
+      "itemCategories": [
+        {
+          "id": "54009119af1c881c07000029",
+          "name": "Item",
+          "normalizedName": "item",
+          "parent": ""
+        },
+        {
+          "id": "cat-food",
+          "name": "Food",
+          "normalizedName": "food",
+          "parent": "54009119af1c881c07000029"
+        }
+      ],
       "items": {
         "item-bolt": {
           "id": "item-bolt",
@@ -87,6 +101,7 @@
           "name": "Bottle of water",
           "shortName": "Water",
           "iconLink": "",
+          "categories": ["cat-food", "54009119af1c881c07000029"],
           "basePrice": 1000,
           "lastLowPrice": 1200,
           "avg24hPrice": 1250,
@@ -338,6 +353,7 @@
           "id": "item-superwater",
           "name": "Canister with purified water",
           "shortName": "PWater",
+          "categories": ["cat-food", "54009119af1c881c07000029"],
           "basePrice": 30000,
           "lastLowPrice": 50000,
           "avg24hPrice": 51000,
@@ -559,6 +575,20 @@
           "count": 1,
           "foundInRaid": false,
           "items": ["item-bolt"]
+        }
+      ]
+    },
+    "quest-provisions": {
+      "id": "quest-provisions",
+      "name": "Provisions run",
+      "trader": "trader-therapist",
+      "minTraderLevel": 1,
+      "objectives": [
+        {
+          "type": "giveItem",
+          "count": 5,
+          "foundInRaid": true,
+          "items": ["item-water", "item-superwater"]
         }
       ]
     }
