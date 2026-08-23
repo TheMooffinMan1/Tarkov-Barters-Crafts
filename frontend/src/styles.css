@@ -718,46 +718,15 @@ tr.station-break td {
 }
 .lookup-blocked { margin: 0; color: var(--neg); font-weight: 600; }
 .lookup-note { margin: 0; color: var(--muted); font-size: 13px; }
-.lookup-trader-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.lookup-trader-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: var(--bg-elev-2);
-  border: 1px solid transparent;
-}
-.lookup-trader-row.is-best {
-  border-color: rgba(125, 204, 130, 0.45);
-  background: rgba(125, 204, 130, 0.08);
-}
-.lookup-trader-row.is-locked { opacity: 0.72; }
-.lookup-trader-main {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-.lookup-trader-name { font-weight: 600; }
-.lookup-trader-level {
-  color: var(--muted);
-  font-size: 13px;
-}
+.lookup-trader-list li.is-best .lookup-trader-price { color: var(--pos); }
+.lookup-trader-list li.is-locked { opacity: 0.72; }
+.lookup-trader-list li.is-locked .lookup-trader-price { color: var(--muted); }
 .lookup-trader-price {
   font-variant-numeric: tabular-nums;
   font-size: 16px;
+  margin-left: auto;
+  white-space: nowrap;
 }
-.lookup-trader-row.is-best .lookup-trader-price { color: var(--pos); }
-.lookup-trader-row.is-locked .lookup-trader-price { color: var(--muted); }
 .lookup-flea-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -212,24 +212,34 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
           <section className="lookup-panel">
             <h3 className="lookup-panel-title">Sell to trader</h3>
             {detail.traderSell.length ? (
-              <ul className="lookup-trader-list">
+              <ul className="lookup-ref-list lookup-quest-list lookup-trader-list">
                 {detail.traderSell.map((offer) => (
                   <li
                     key={`${offer.traderId}:${offer.minTraderLevel}:${offer.priceRUB}`}
                     className={[
-                      "lookup-trader-row",
                       offer.priceRUB === bestTraderPrice ? "is-best" : "",
                       offer.locked ? "is-locked" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
                   >
-                    <div className="lookup-trader-main">
-                      <span className="lookup-trader-name">{offer.traderName}</span>
-                      <span className="lookup-trader-level">LL{offer.minTraderLevel}</span>
-                      {offer.locked ? <span className="badge-locked">Locked</span> : null}
-                    </div>
+                    {offer.traderImageLink ? (
+                      <span className="lookup-quest-trader">
+                        <img
+                          src={offer.traderImageLink}
+                          alt=""
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </span>
+                    ) : null}
+                    <span className="lookup-quest-copy">
+                      <span className="lookup-quest-name">{offer.traderName}</span>
+                    </span>
                     <strong className="lookup-trader-price">{formatRoubles(offer.priceRUB)}</strong>
+                    {offer.locked ? <span className="badge-locked">Locked</span> : null}
                   </li>
                 ))}
               </ul>

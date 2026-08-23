@@ -128,7 +128,7 @@ declare module "@compute/index.mjs" {
       netLastLow: number;
       netAvg24h: number;
     };
-    traderSell: Array<TraderOffer & { traderName: string; locked: boolean }>;
+    traderSell: Array<TraderOffer & { traderName: string; traderImageLink?: string | null; locked: boolean }>;
     refs: {
       hideout: HideoutRef[];
       quests: QuestRef[];

@@ -42,6 +42,7 @@ test("lookupItem sorts trader sell offers by price", () => {
   assert.equal(result.traderSell[0].traderName, "Therapist");
   assert.equal(result.traderSell[0].priceRUB, 400000);
   assert.equal(result.traderSell[1].priceRUB, 200000);
+  assert.ok(result.traderSell[0].traderImageLink);
 });
 
 test("lookupItem passes hideout and quest refs with trader images", () => {

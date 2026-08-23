@@ -36,6 +36,7 @@ export function lookupItem(blob, itemId, userSettings = {}) {
     .map((offer) => ({
       traderId: offer.traderId,
       traderName: blobTraderName(traders, offer.traderId),
+      traderImageLink: traderImageLink(traders, offer.traderId),
       priceRUB: offer.priceRUB,
       minTraderLevel: offer.minTraderLevel || 1,
       taskUnlock: offer.taskUnlock || null,
