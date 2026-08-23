@@ -9,7 +9,6 @@ import {
   titleCaseNormalized,
   consumableKind,
   assignItemSlugs,
-  resolveItemId,
 } from "./util.mjs";
 
 const QUEST_OBJECTIVE_TYPES = new Set(["giveItem", "findItem", "plantItem", "sellItem", "useItem"]);

@@ -5,13 +5,14 @@ import {
   GAME_MODES,
   valuate,
   loyaltyForPlayerLevel,
+  resolveItemId,
   type ProfitBlob,
   type Settings,
   type ValuatedRow,
 } from "@compute/index.mjs";
 import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
 import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
-import { isItemsPath, paths } from "./lib/routes";
+import { isItemsPath, paths, slugFromPath } from "./lib/routes";
 import { withQuestLlSync } from "./lib/quests";
 import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";

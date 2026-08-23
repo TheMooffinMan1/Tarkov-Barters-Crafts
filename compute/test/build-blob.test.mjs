@@ -90,3 +90,9 @@ test("itemRefs index hideout and quest requirements", () => {
   assert.ok(bolt.quests.some((row) => row.taskName === "BTR delivery" && row.traderId === "656f0f98d80a697f855d34b1"));
   assert.ok(out.meta.traders["656f0f98d80a697f855d34b1"]?.imageLink);
 });
+
+test("items get short-name slugs and a slug index", () => {
+  const out = blob();
+  assert.equal(out.items["item-bolt"].slug, "bolts");
+  assert.equal(out.itemSlugs.bolts, "item-bolt");
+});
