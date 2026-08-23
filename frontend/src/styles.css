@@ -560,8 +560,32 @@ tr.station-break td {
   background: var(--bg-elev-2);
 }
 .lookup-detail-search {
+  position: relative;
   flex: 1;
   min-width: min(100%, 360px);
+}
+.lookup-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  box-shadow: var(--shadow);
+  max-height: min(360px, 50vh);
+  overflow: auto;
+}
+.lookup-search-dropdown .lookup-suggestions {
+  gap: 6px;
+}
+.lookup-dropdown-empty {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 14px;
 }
 .lookup-hero {
   display: flex;

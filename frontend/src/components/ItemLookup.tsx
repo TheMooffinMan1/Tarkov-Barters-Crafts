@@ -49,29 +49,32 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
       .slice(0, SUGGESTION_LIMIT);
   }, [blob.items, query]);
 
-  const activeItemId =
-    selectedItemId && (blob.items[selectedItemId] || suggestions.some((item) => item.id === selectedItemId))
-      ? selectedItemId
-      : suggestions.length === 1
-        ? suggestions[0].id
-        : "";
+  const hasPinnedItem = Boolean(selectedItemId && blob.items[selectedItemId]);
 
-  const awaitingPick = Boolean(query && suggestions.length > 1 && !selectedItemId);
-  const isDetailView = Boolean(activeItemId && !awaitingPick);
-  const detail = activeItemId ? lookupItem(blob, activeItemId, settings) : null;
+  const displayItemId = hasPinnedItem
+    ? selectedItemId
+    : query && suggestions.length === 1
+      ? suggestions[0].id
+      : "";
+
+  const isDetailView = Boolean(displayItemId);
+  const awaitingPick = Boolean(!hasPinnedItem && query && suggestions.length > 1);
+  const showDetailDropdown = Boolean(hasPinnedItem && query);
+  const detail = displayItemId ? lookupItem(blob, displayItemId, settings) : null;
   const bestTraderPrice = detail?.traderSell[0]?.priceRUB ?? 0;
+
+  function selectItem(itemId: string) {
+    onSelectItem(itemId);
+    onSearchChange("");
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (suggestions.length === 1) onSelectItem(suggestions[0].id);
-    else if (suggestions.length > 1 && !selectedItemId) onSelectItem(suggestions[0].id);
+    if (suggestions.length >= 1) selectItem(suggestions[0].id);
   }
 
   function handleBack() {
-    if (selectedItemId) {
-      onSelectItem("");
-      return;
-    }
+    onSelectItem("");
     onSearchChange("");
   }
 
@@ -92,11 +95,29 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
               className="lookup-search"
               placeholder="Search another item…"
               value={search}
-              onChange={(event) => {
-                onSearchChange(event.target.value);
-                onSelectItem("");
-              }}
+              onChange={(event) => onSearchChange(event.target.value)}
             />
+            {showDetailDropdown ? (
+              <div className="lookup-search-dropdown">
+                {suggestions.length ? (
+                  <ul className="lookup-suggestions" role="listbox">
+                    {suggestions.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          className="lookup-suggestion"
+                          onClick={() => selectItem(item.id)}
+                        >
+                          <ItemStack name={item.name} shortName={item.shortName} iconLink={item.iconLink} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="lookup-dropdown-empty">No items match that search.</p>
+                )}
+              </div>
+            ) : null}
           </form>
         </header>
 
@@ -267,7 +288,7 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
           <ul className="lookup-suggestions" role="listbox">
             {suggestions.map((item) => (
               <li key={item.id}>
-                <button type="button" className="lookup-suggestion" onClick={() => onSelectItem(item.id)}>
+                <button type="button" className="lookup-suggestion" onClick={() => selectItem(item.id)}>
                   <ItemStack name={item.name} shortName={item.shortName} iconLink={item.iconLink} />
                 </button>
               </li>
