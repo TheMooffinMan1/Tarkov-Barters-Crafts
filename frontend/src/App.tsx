@@ -295,12 +295,14 @@ export function App() {
       </header>
 
       <nav className="page-nav" aria-label="Site sections">
-        <div className="segmented">
+        <div className="page-switch">
           <button type="button" className={page === "profit" ? "active" : ""} onClick={() => setPage("profit")}>
-            Profit
+            <span className="page-switch-title">Profit</span>
+            <span className="page-switch-desc">Crafts, barters & flips</span>
           </button>
           <button type="button" className={page === "items" ? "active" : ""} onClick={() => setPage("items")}>
-            Items
+            <span className="page-switch-title">Items</span>
+            <span className="page-switch-desc">Prices & requirements</span>
           </button>
         </div>
       </nav>

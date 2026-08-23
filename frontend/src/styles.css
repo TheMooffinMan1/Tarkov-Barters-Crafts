@@ -414,20 +414,102 @@ tr.station-break td {
 .inputs { display: flex; flex-direction: column; gap: 10px; }
 .flip-row { height: 76px; }
 
+.page-nav {
+  margin-bottom: 24px;
+}
+.page-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 280px));
+  gap: 12px;
+}
+.page-switch button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 88px;
+  padding: 18px 20px;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.page-switch button:hover {
+  border-color: var(--gold-dim);
+  background: var(--bg-elev-2);
+}
+.page-switch button.active {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(199, 163, 90, 0.14) 0%, var(--bg-elev) 100%);
+  box-shadow: inset 0 0 0 1px rgba(199, 163, 90, 0.25);
+}
+.page-switch-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.page-switch-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.page-switch button.active .page-switch-desc {
+  color: #c4b48a;
+}
+.tab-bar {
+  margin-bottom: 12px;
+}
+
 .lookup-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 920px;
+  gap: 24px;
 }
-.lookup-search-wrap {
+.lookup-page--search {
+  min-height: min(60vh, 520px);
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0 48px;
+}
+.lookup-page--detail {
+  width: 100%;
+  gap: 28px;
+}
+.lookup-search-stage {
+  width: min(100%, 640px);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
+}
+.lookup-search-label {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 650;
 }
 .lookup-search {
   width: 100%;
-  max-width: 520px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  color: var(--text);
+  padding: 12px 14px;
+  font: inherit;
+}
+.lookup-search--hero {
+  padding: 18px 20px;
+  font-size: 20px;
+  border-radius: 6px;
+  border-width: 2px;
+}
+.lookup-search:focus {
+  outline: none;
+  border-color: var(--gold);
 }
 .lookup-suggestions {
   list-style: none;
@@ -435,83 +517,221 @@ tr.station-break td {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 520px;
+  gap: 8px;
 }
 .lookup-suggestion {
   width: 100%;
   text-align: left;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--bg-elev);
-  padding: 8px 10px;
+  padding: 10px 12px;
   cursor: pointer;
 }
-.lookup-suggestion:hover,
-.lookup-suggestion.active {
+.lookup-suggestion:hover {
   border-color: var(--gold);
   background: var(--bg-elev-2);
 }
-.lookup-hint { margin: 0; font-size: 13px; }
-.page-nav {
-  margin-bottom: 20px;
-}
-.tab-bar {
-  margin-bottom: 12px;
-}
-.lookup-detail {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg-elev);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.lookup-section { display: flex; flex-direction: column; gap: 10px; }
-.lookup-heading {
+.lookup-hint,
+.lookup-empty {
   margin: 0;
   font-size: 14px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
 }
-.lookup-empty { margin: 0; }
+.lookup-detail-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.lookup-back {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  color: var(--text);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lookup-back:hover {
+  border-color: var(--gold-dim);
+  background: var(--bg-elev-2);
+}
+.lookup-detail-search {
+  flex: 1;
+  min-width: min(100%, 360px);
+}
+.lookup-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 8px 0 4px;
+}
+.lookup-hero-icon {
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+.lookup-hero-icon img {
+  display: block;
+  image-rendering: pixelated;
+}
+.lookup-hero-icon .item-fallback {
+  width: 96px;
+  height: 96px;
+  border-radius: 4px;
+}
+.lookup-hero-name {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.lookup-hero-meta {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.lookup-hero-dot { opacity: 0.55; }
+.lookup-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.lookup-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  min-height: 160px;
+}
+.lookup-panel-title {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+.lookup-panel-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
 .lookup-blocked { margin: 0; color: var(--neg); font-weight: 600; }
 .lookup-note { margin: 0; color: var(--muted); font-size: 13px; }
-.lookup-grid { color: var(--muted); }
-.lookup-price-grid {
+.lookup-trader-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lookup-trader-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--bg-elev-2);
+  border: 1px solid transparent;
+}
+.lookup-trader-row.is-best {
+  border-color: rgba(125, 204, 130, 0.45);
+  background: rgba(125, 204, 130, 0.08);
+}
+.lookup-trader-row.is-locked { opacity: 0.72; }
+.lookup-trader-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.lookup-trader-name { font-weight: 600; }
+.lookup-trader-level {
+  color: var(--muted);
+  font-size: 13px;
+}
+.lookup-trader-price {
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+}
+.lookup-trader-row.is-best .lookup-trader-price { color: var(--pos); }
+.lookup-trader-row.is-locked .lookup-trader-price { color: var(--muted); }
+.lookup-flea-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
-.lookup-price-card {
+.lookup-flea-stat {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--bg-elev-2);
-  border: 1px solid var(--line);
 }
-.lookup-price-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
-.lookup-price-sub { color: var(--muted); font-size: 12px; }
+.lookup-flea-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.lookup-flea-value {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.lookup-flea-sub { color: var(--muted); font-size: 12px; }
 .lookup-fee-tip { color: var(--gold); font-size: 12px; }
 .lookup-ref-list {
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .lookup-ref-list li {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.4;
 }
-.lookup-best td { color: var(--pos); font-weight: 650; }
-.lookup-locked td { color: var(--muted); }
+.lookup-ref-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+@media (max-width: 900px) {
+  .lookup-panels { grid-template-columns: 1fr; }
+  .page-switch { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .lookup-flea-grid { grid-template-columns: 1fr; }
+  .page-switch { grid-template-columns: 1fr; }
+}
 .badge-fir,
 .badge-locked {
   display: inline-flex;
