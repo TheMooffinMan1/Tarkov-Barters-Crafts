@@ -172,8 +172,8 @@ export function App() {
   }, [settings]);
 
   useEffect(() => {
-    saveUiState({ mode, page, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip });
-  }, [mode, page, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip]);
+    saveUiState({ mode });
+  }, [mode]);
 
   function resetToDefaults() {
     setSearch("");

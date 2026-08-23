@@ -98,25 +98,12 @@ export function loadUiState(): UiState {
     if (!raw) return { ...DEFAULT_UI };
     const parsed = JSON.parse(raw) as Partial<UiState>;
     const mode = GAME_MODES.some((entry) => entry.id === parsed.mode) ? parsed.mode! : DEFAULT_UI.mode;
-    const page: Page = parsed.page === "items" || parsed.tab === "items" ? "items" : "profit";
-    const tab =
-      parsed.tab === "barters" || parsed.tab === "flips" || parsed.tab === "crafts" ? parsed.tab : DEFAULT_UI.tab;
-    return {
-      mode,
-      page,
-      tab,
-      search: typeof parsed.search === "string" ? parsed.search : "",
-      itemSearch: typeof parsed.itemSearch === "string" ? parsed.itemSearch : "",
-      selectedItemId: typeof parsed.selectedItemId === "string" ? parsed.selectedItemId : "",
-      stationChip: typeof parsed.stationChip === "string" ? parsed.stationChip : "",
-      traderChip: typeof parsed.traderChip === "string" ? parsed.traderChip : "",
-      traderLevelChip: Number(parsed.traderLevelChip) || 0,
-    };
+    return { ...DEFAULT_UI, mode };
   } catch {
     return { ...DEFAULT_UI };
   }
 }
 
-export function saveUiState(ui: UiState) {
-  localStorage.setItem(UI_KEY, JSON.stringify(ui));
+export function saveUiState(ui: Pick<UiState, "mode">) {
+  localStorage.setItem(UI_KEY, JSON.stringify({ mode: ui.mode }));
 }
