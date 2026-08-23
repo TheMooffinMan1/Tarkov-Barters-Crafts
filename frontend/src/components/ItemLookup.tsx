@@ -293,11 +293,25 @@ export function ItemLookup({ blob, settings, search, onSearchChange, selectedIte
           <section className="lookup-panel">
             <h3 className="lookup-panel-title">Hideout requirements</h3>
             {detail.refs.hideout.length ? (
-              <ul className="lookup-ref-list">
+              <ul className="lookup-ref-list lookup-quest-list">
                 {detail.refs.hideout.map((row) => (
                   <li key={`${row.stationId}:${row.level}:${row.count}:${row.foundInRaid}`}>
-                    <span>
-                      {row.stationName} level {row.level} ×{formatQty(row.count)}
+                    {row.stationImageLink ? (
+                      <span className="lookup-quest-trader">
+                        <img
+                          src={row.stationImageLink}
+                          alt=""
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <span className="lookup-quest-ll">Lv{row.level}</span>
+                      </span>
+                    ) : null}
+                    <span className="lookup-quest-copy">
+                      <span className="lookup-quest-name">{row.stationName}</span>
+                      <span className="lookup-quest-detail">Level {row.level} ×{formatQty(row.count)}</span>
                     </span>
                     {row.foundInRaid ? <span className="badge-fir">FIR</span> : null}
                   </li>

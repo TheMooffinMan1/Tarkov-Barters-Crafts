@@ -230,6 +230,12 @@ function stationDisplayName(station) {
   return station.name || titleCaseNormalized(station.normalizedName) || station.id;
 }
 
+function stationImageLink(station) {
+  if (station.imageLink) return station.imageLink;
+  const normalizedName = station.normalizedName;
+  return normalizedName ? `https://assets.tarkov.dev/station-${normalizedName}.png` : null;
+}
+
 function buildHideoutRefs(hideout) {
   const refs = {};
   for (const [stationId, station] of Object.entries(asMap(hideout))) {
@@ -243,6 +249,7 @@ function buildHideoutRefs(hideout) {
         ensureItemRef(refs, itemId).hideout.push({
           stationId,
           stationName,
+          stationImageLink: stationImageLink(station),
           level,
           count: Number(req.count) || 1,
           foundInRaid: req.attributes?.foundInRaid === true,

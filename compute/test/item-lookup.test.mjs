@@ -48,6 +48,7 @@ test("lookupItem passes hideout and quest refs with trader images", () => {
   const data = blob();
   const result = lookupItem(data, "item-bolt", { filterToProgress: false });
   assert.equal(result.refs.hideout.length, 1);
+  assert.equal(result.refs.hideout[0].stationImageLink, "https://assets.tarkov.dev/station-lavatory.png");
   assert.equal(result.refs.quests.length, 3);
   const gunsmith = result.refs.quests.find((row) => row.taskName === "Gunsmith - Part 1");
   assert.equal(gunsmith?.traderLevel, 2);

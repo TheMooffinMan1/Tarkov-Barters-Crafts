@@ -484,6 +484,7 @@
       "id": "station-lavatory",
       "name": "Lavatory",
       "normalizedName": "lavatory",
+      "imageLink": "https://assets.tarkov.dev/station-lavatory.png",
       "levels": [
         {},
         {},

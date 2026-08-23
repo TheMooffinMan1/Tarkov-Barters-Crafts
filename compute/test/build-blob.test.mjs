@@ -80,6 +80,7 @@ test("itemRefs index hideout and quest requirements", () => {
   assert.equal(filter.hideout[0].level, 3);
   assert.equal(filter.hideout[0].count, 2);
   assert.equal(filter.hideout[0].foundInRaid, true);
+  assert.equal(filter.hideout[0].stationImageLink, "https://assets.tarkov.dev/station-lavatory.png");
 
   const bolt = out.itemRefs["item-bolt"];
   assert.equal(bolt.hideout.length, 1);

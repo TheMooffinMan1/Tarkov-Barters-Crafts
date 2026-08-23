@@ -94,6 +94,7 @@ declare module "@compute/index.mjs" {
   export interface HideoutRef {
     stationId: string;
     stationName: string;
+    stationImageLink?: string | null;
     level: number;
     count: number;
     foundInRaid: boolean;
