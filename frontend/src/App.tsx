@@ -77,6 +77,7 @@ export function App() {
   const [mode, setMode] = useState(initialUi.mode);
   const [tab, setTab] = useState<Tab>(initialUi.tab);
   const [search, setSearch] = useState(initialUi.search);
+  const [itemSearch, setItemSearch] = useState(initialUi.itemSearch);
   const [selectedItemId, setSelectedItemId] = useState(initialUi.selectedItemId);
   const [stationChip, setStationChip] = useState(initialUi.stationChip);
   const [traderChip, setTraderChip] = useState(initialUi.traderChip);
@@ -170,8 +171,8 @@ export function App() {
   }, [settings]);
 
   useEffect(() => {
-    saveUiState({ mode, tab, search, selectedItemId, stationChip, traderChip, traderLevelChip });
-  }, [mode, tab, search, selectedItemId, stationChip, traderChip, traderLevelChip]);
+    saveUiState({ mode, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip });
+  }, [mode, tab, search, itemSearch, selectedItemId, stationChip, traderChip, traderLevelChip]);
 
   function resetToDefaults() {
     setSearch("");
@@ -258,7 +259,7 @@ export function App() {
   const valued = { crafts, barters: recipes.barters, flips };
 
   const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
-  const itemCount = blob ? Object.keys(blob.items).length : 0;
+  const isItemsTab = tab === "items";
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();
@@ -335,6 +336,35 @@ export function App() {
         ) : null}
       </div>
 
+      <div className="tab-bar">
+        <div className="segmented">
+          {(
+            [
+              ["crafts", `Crafts (${valued.crafts.length})`],
+              ["barters", `Barters (${valued.barters.length})`],
+              ["flips", `Flips (${valued.flips.length})`],
+              ["items", "Items"],
+            ] as const
+          ).map(([id, label]) => (
+            <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isItemsTab ? (
+        blob ? (
+          <ItemLookup
+            blob={blob}
+            settings={settings}
+            search={itemSearch}
+            onSearchChange={setItemSearch}
+            selectedItemId={selectedItemId}
+            onSelectItem={setSelectedItemId}
+          />
+        ) : null
+      ) : (
       <div className="layout">
         {blob ? (
           <SettingsPanel blob={blob} settings={settings} onChange={setSettings} onReset={resetToDefaults} />
@@ -344,23 +374,9 @@ export function App() {
 
         <main>
           <div className="toolbar">
-            <div className="segmented">
-              {(
-                [
-                  ["crafts", `Crafts (${valued.crafts.length})`],
-                  ["barters", `Barters (${valued.barters.length})`],
-                  ["flips", `Flips (${valued.flips.length})`],
-                  ["items", `Items (${itemCount})`],
-                ] as const
-              ).map(([id, label]) => (
-                <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
-                  {label}
-                </button>
-              ))}
-            </div>
             <input
               className="search"
-              placeholder={tab === "items" ? "Search items by name…" : "Search item, station, trader…"}
+              placeholder="Search item, station, trader…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -455,15 +471,6 @@ export function App() {
             </div>
           ) : null}
 
-          {tab === "items" && blob ? (
-            <ItemLookup
-              blob={blob}
-              settings={settings}
-              search={search}
-              selectedItemId={selectedItemId}
-              onSelectItem={setSelectedItemId}
-            />
-          ) : null}
           {tab === "crafts" ? (
             <ProfitTable
               key={`crafts-${resetNonce}`}
@@ -497,6 +504,7 @@ export function App() {
           ) : null}
         </main>
       </div>
+      )}
 
       <footer>
         Price data from{" "}

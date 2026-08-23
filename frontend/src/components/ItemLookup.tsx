@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import type { FormEvent } from "react";
 import { lookupItem, type ProfitBlob, type Settings } from "@compute/index.mjs";
 import { formatQty, formatRoubles } from "../lib/format";
 import { ItemStack } from "./ItemStack";
@@ -18,11 +19,12 @@ type Props = {
   blob: ProfitBlob;
   settings: Settings;
   search: string;
+  onSearchChange: (value: string) => void;
   selectedItemId: string;
   onSelectItem: (itemId: string) => void;
 };
 
-const RESULT_LIMIT = 100;
+const SUGGESTION_LIMIT = 8;
 
 const QUEST_TYPE_LABEL: Record<string, string> = {
   giveItem: "Hand over",
@@ -36,57 +38,72 @@ function normalizeQuery(search: string) {
   return search.trim().toLowerCase().replace(/\s+/g, "");
 }
 
-export function ItemLookup({ blob, settings, search, selectedItemId, onSelectItem }: Props) {
+export function ItemLookup({ blob, settings, search, onSearchChange, selectedItemId, onSelectItem }: Props) {
   const query = normalizeQuery(search);
 
-  const results = useMemo(() => {
-    const items = Object.values(blob.items) as SlimItem[];
-    if (!query) return items.sort((a, b) => a.name.localeCompare(b.name)).slice(0, RESULT_LIMIT);
-    return items
+  const suggestions = useMemo(() => {
+    if (!query) return [];
+    return (Object.values(blob.items) as SlimItem[])
       .filter((item) => (item.search || "").includes(query))
       .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(0, RESULT_LIMIT);
+      .slice(0, SUGGESTION_LIMIT);
   }, [blob.items, query]);
 
-  useEffect(() => {
-    if (!results.length) {
-      if (selectedItemId) onSelectItem("");
-      return;
-    }
-    if (!selectedItemId || !results.some((item) => item.id === selectedItemId)) {
-      onSelectItem(results[0].id);
-    }
-  }, [results, selectedItemId, onSelectItem]);
+  const activeItemId =
+    selectedItemId && (blob.items[selectedItemId] || suggestions.some((item) => item.id === selectedItemId))
+      ? selectedItemId
+      : suggestions.length === 1
+        ? suggestions[0].id
+        : "";
 
-  const detail = selectedItemId ? lookupItem(blob, selectedItemId, settings) : null;
+  const detail = activeItemId ? lookupItem(blob, activeItemId, settings) : null;
   const bestTraderPrice = detail?.traderSell[0]?.priceRUB ?? 0;
 
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (suggestions.length === 1) onSelectItem(suggestions[0].id);
+    else if (suggestions.length > 1 && !selectedItemId) onSelectItem(suggestions[0].id);
+  }
+
   return (
-    <div className="lookup-layout">
-      <div className="lookup-results">
-        <div className="table-meta">
-          {query
-            ? `${results.length}${results.length >= RESULT_LIMIT ? "+" : ""} matches`
-            : `${Object.keys(blob.items).length} items`}
-        </div>
-        <div className="lookup-results-list">
-          {results.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`lookup-row ${selectedItemId === item.id ? "active" : ""}`}
-              onClick={() => onSelectItem(item.id)}
-            >
-              <ItemStack name={item.name} shortName={item.shortName} iconLink={item.iconLink} />
-            </button>
-          ))}
-          {!results.length ? <p className="muted lookup-empty">No items match your search.</p> : null}
-        </div>
-      </div>
+    <div className="lookup-page">
+      <form className="lookup-search-wrap" onSubmit={handleSubmit}>
+        <input
+          className="search lookup-search"
+          placeholder="Search by item name…"
+          value={search}
+          onChange={(event) => {
+            onSearchChange(event.target.value);
+            onSelectItem("");
+          }}
+          autoFocus
+        />
+        {query && suggestions.length > 1 ? (
+          <ul className="lookup-suggestions" role="listbox">
+            {suggestions.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className={`lookup-suggestion ${selectedItemId === item.id ? "active" : ""}`}
+                  onClick={() => onSelectItem(item.id)}
+                >
+                  <ItemStack name={item.name} shortName={item.shortName} iconLink={item.iconLink} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {query && !suggestions.length ? <p className="muted lookup-hint">No items match that search.</p> : null}
+        {query && suggestions.length > 1 && !selectedItemId ? (
+          <p className="muted lookup-hint">{suggestions.length} matches — pick one above or press Enter for the first.</p>
+        ) : null}
+      </form>
 
       <div className="lookup-detail">
-        {!detail ? (
-          <p className="muted lookup-empty">Search for an item to see prices and requirements.</p>
+        {!query ? (
+          <p className="muted lookup-empty">Search for an item to see trader prices, flea value, and hideout or quest requirements.</p>
+        ) : !detail ? (
+          <p className="muted lookup-empty">Select a matching item to view details.</p>
         ) : (
           <>
             <section className="lookup-section">
@@ -118,7 +135,12 @@ export function ItemLookup({ blob, settings, search, selectedItemId, onSelectIte
                     </thead>
                     <tbody>
                       {detail.traderSell.map((offer) => (
-                        <tr key={`${offer.traderId}:${offer.minTraderLevel}:${offer.priceRUB}`} className={offer.priceRUB === bestTraderPrice ? "lookup-best" : offer.locked ? "lookup-locked" : ""}>
+                        <tr
+                          key={`${offer.traderId}:${offer.minTraderLevel}:${offer.priceRUB}`}
+                          className={
+                            offer.priceRUB === bestTraderPrice ? "lookup-best" : offer.locked ? "lookup-locked" : ""
+                          }
+                        >
                           <td>
                             {offer.traderName}
                             {offer.locked ? <span className="badge-locked">Locked</span> : null}

@@ -11,6 +11,7 @@ export type UiState = {
   mode: string;
   tab: Tab;
   search: string;
+  itemSearch: string;
   selectedItemId: string;
   stationChip: string;
   traderChip: string;
@@ -24,6 +25,7 @@ const DEFAULT_UI: UiState = {
   mode: "regular",
   tab: "crafts",
   search: "",
+  itemSearch: "",
   selectedItemId: "",
   stationChip: "",
   traderChip: "",
@@ -101,6 +103,7 @@ export function loadUiState(): UiState {
       mode,
       tab,
       search: typeof parsed.search === "string" ? parsed.search : "",
+      itemSearch: typeof parsed.itemSearch === "string" ? parsed.itemSearch : "",
       selectedItemId: typeof parsed.selectedItemId === "string" ? parsed.selectedItemId : "",
       stationChip: typeof parsed.stationChip === "string" ? parsed.stationChip : "",
       traderChip: typeof parsed.traderChip === "string" ? parsed.traderChip : "",
