@@ -5,8 +5,8 @@ import {
   type Settings,
 } from "@compute/index.mjs";
 
-export type Tab = "crafts" | "barters" | "flips" | "consumables";
-export type Page = "profit" | "items";
+export type Tab = "crafts" | "barters" | "flips";
+export type Page = "profit" | "consumables" | "items";
 
 export type UiState = {
   mode: string;

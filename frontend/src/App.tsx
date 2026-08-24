@@ -13,7 +13,7 @@ import {
 } from "@compute/index.mjs";
 import { loadBlob, requestPoll, canRemoteRefresh } from "./lib/api";
 import { loadSettings, loadUiState, saveSettings, saveUiState, type Tab } from "./lib/settings";
-import { isItemsPath, paths, slugFromPath } from "./lib/routes";
+import { isConsumablesPath, isItemsPath, paths, slugFromPath } from "./lib/routes";
 import { withQuestLlSync } from "./lib/quests";
 import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated } from "./lib/format";
 import { ModeToggle } from "./components/ModeToggle";
@@ -117,6 +117,7 @@ export function App() {
   const [mode, setMode] = useState(initialUi.mode);
   const [tab, setTab] = useState<Tab>(initialUi.tab);
   const [search, setSearch] = useState(initialUi.search);
+  const [consumableSearch, setConsumableSearch] = useState("");
   const [itemSearch, setItemSearch] = useState(initialUi.itemSearch);
   const [stationChip, setStationChip] = useState(initialUi.stationChip);
   const [traderChip, setTraderChip] = useState(initialUi.traderChip);
@@ -314,10 +315,11 @@ export function App() {
     return topCraftsPerStation(recipes.crafts, 2);
   }, [recipes.crafts, settings.bestTwoCraftsPerStation]);
 
-  const valued = { crafts, barters: recipes.barters, flips, consumables };
+  const valued = { crafts, barters: recipes.barters, flips };
 
   const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
   const isItemsPage = isItemsPath(location.pathname);
+  const isConsumablesPage = isConsumablesPath(location.pathname);
   const routeItemId = blob ? resolveItemId(blob, slugFromPath(location.pathname)) : "";
 
   useEffect(() => {
@@ -330,8 +332,12 @@ export function App() {
       document.title = "Tarkov Item Lookup | Tarkov Crafts, Barters & Flips";
       return;
     }
+    if (isConsumablesPage) {
+      document.title = "Tarkov Fuel & Filter Prices | Tarkov Crafts, Barters & Flips";
+      return;
+    }
     document.title = profitTitle;
-  }, [blob, isItemsPage, routeItemId]);
+  }, [blob, isItemsPage, isConsumablesPage, routeItemId]);
   const stations = blob ? Object.values(blob.meta.stations).sort((a, b) => a.name.localeCompare(b.name)) : [];
   const sellTraderIds = useMemo(() => {
     const ids = new Set<string>();
@@ -346,11 +352,11 @@ export function App() {
   const traders = blob
     ? Object.values(blob.meta.traders)
         .filter((trader) => {
+          if (isConsumablesPage) return true;
           if (tab === "flips" && settings.flipDirection === "fleaToTrader") return sellTraderIds.has(trader.id);
           return (
             blob.barters.some((row) => row.traderId === trader.id) ||
-            blob.flips.some((row) => row.traderId === trader.id) ||
-            tab === "consumables"
+            blob.flips.some((row) => row.traderId === trader.id)
           );
         })
         .sort((a, b) => a.name.localeCompare(b.name))
@@ -361,7 +367,9 @@ export function App() {
       <header className="top">
         <div>
           <p className="eyebrow">Escape from Tarkov profit calculator</p>
-          <h1>{isItemsPage ? "Item lookup" : "Hideout crafts, barters & flips"}</h1>
+          <h1>
+            {isItemsPage ? "Item lookup" : isConsumablesPage ? "Fuel & filters" : "Hideout crafts, barters & flips"}
+          </h1>
         </div>
         <ModeToggle mode={mode} onChange={setMode} />
       </header>
@@ -371,6 +379,10 @@ export function App() {
           <NavLink to={paths.profit} end className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="page-switch-title">Profit</span>
             <span className="page-switch-desc">Crafts, barters & flips</span>
+          </NavLink>
+          <NavLink to={paths.consumables} className={({ isActive }) => (isActive ? "active" : "")}>
+            <span className="page-switch-title">Fuel & filters</span>
+            <span className="page-switch-desc">Cheapest generator fuel & hideout filters</span>
           </NavLink>
           <NavLink to={paths.items} className={() => (isItemsPage ? "active" : "")}>
             <span className="page-switch-title">Items</span>
@@ -440,6 +452,52 @@ export function App() {
           }
         />
         <Route
+          path={paths.consumables}
+          element={
+            blob ? (
+              <main className="consumables-page">
+                <div className="toolbar">
+                  <input
+                    className="search"
+                    placeholder="Search item, trader…"
+                    value={consumableSearch}
+                    onChange={(e) => setConsumableSearch(e.target.value)}
+                  />
+                </div>
+                <div className="chips">
+                  <button type="button" className={!traderChip ? "active" : ""} onClick={() => setTraderChip("")}>
+                    All traders
+                  </button>
+                  {traders.map((trader) => (
+                    <button
+                      key={trader.id}
+                      type="button"
+                      className={traderChip === trader.id ? "active" : ""}
+                      onClick={() => setTraderChip(trader.id)}
+                    >
+                      {trader.name}
+                    </button>
+                  ))}
+                  <button type="button" className={!traderLevelChip ? "active" : ""} onClick={() => setTraderLevelChip(0)}>
+                    All LL
+                  </button>
+                  {[1, 2, 3, 4].map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      className={traderLevelChip === level ? "active" : ""}
+                      onClick={() => setTraderLevelChip(level)}
+                    >
+                      LL{level}
+                    </button>
+                  ))}
+                </div>
+                <ConsumablesTable fuel={consumables.fuel} filters={consumables.filters} search={consumableSearch} />
+              </main>
+            ) : null
+          }
+        />
+        <Route
           path={paths.profit}
           element={
             <div className="layout">
@@ -457,7 +515,6 @@ export function App() {
                         ["crafts", `Crafts (${valued.crafts.length})`],
                         ["barters", `Barters (${valued.barters.length})`],
                         ["flips", `Flips (${valued.flips.length})`],
-                        ["consumables", "Fuel & filters"],
                       ] as const
                     ).map(([id, label]) => (
                       <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
@@ -533,7 +590,7 @@ export function App() {
                       </button>
                     ))}
                   </div>
-                ) : tab === "barters" || tab === "flips" || tab === "consumables" ? (
+                ) : tab === "barters" || tab === "flips" ? (
                   <div className="chips">
                     <button type="button" className={!traderChip ? "active" : ""} onClick={() => setTraderChip("")}>
                       All traders
@@ -594,9 +651,6 @@ export function App() {
                     hideUnprofitable={settings.hideUnprofitable}
                     onHideQuest={hideQuest}
                   />
-                ) : null}
-                {tab === "consumables" ? (
-                  <ConsumablesTable fuel={valued.consumables.fuel} filters={valued.consumables.filters} search={search} />
                 ) : null}
               </main>
             </div>

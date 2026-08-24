@@ -419,7 +419,7 @@ tr.station-break td {
 }
 .page-switch {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 280px));
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
   gap: 12px;
 }
 .page-switch a {
@@ -889,6 +889,7 @@ footer {
 }
 
 .consumables { display: flex; flex-direction: column; gap: 28px; }
+.consumables-page { max-width: 1200px; }
 .consumables-section h2 {
   margin: 0 0 12px;
   font-size: 18px;

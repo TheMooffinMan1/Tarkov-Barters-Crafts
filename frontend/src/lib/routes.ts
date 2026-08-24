@@ -1,11 +1,16 @@
 export const paths = {
   profit: "/",
+  consumables: "/fuel-filters",
   items: "/items",
   item: (slug: string) => `/items/${encodeURIComponent(slug)}`,
 } as const;
 
 export function isItemsPath(pathname: string) {
   return pathname === paths.items || pathname.startsWith(`${paths.items}/`);
+}
+
+export function isConsumablesPath(pathname: string) {
+  return pathname === paths.consumables;
 }
 
 export function slugFromPath(pathname: string) {
