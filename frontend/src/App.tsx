@@ -377,13 +377,16 @@ export function App() {
       <nav className="page-nav" aria-label="Site sections">
         <div className="page-switch">
           <NavLink to={paths.profit} end className={({ isActive }) => (isActive ? "active" : "")}>
-            Profit
+            <span className="page-switch-title">Profit</span>
+            <span className="page-switch-desc">Crafts, barters & flips</span>
           </NavLink>
           <NavLink to={paths.consumables} className={({ isActive }) => (isActive ? "active" : "")}>
-            Fuel & filters
+            <span className="page-switch-title">Fuel & filters</span>
+            <span className="page-switch-desc">Cheapest generator fuel & hideout filters</span>
           </NavLink>
           <NavLink to={paths.items} className={() => (isItemsPage ? "active" : "")}>
-            Items
+            <span className="page-switch-title">Items</span>
+            <span className="page-switch-desc">Prices & requirements</span>
           </NavLink>
         </div>
       </nav>
