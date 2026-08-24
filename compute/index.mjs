@@ -1,6 +1,7 @@
 export { fleaMarketFee } from "./flea-fee.mjs";
 export { buildProfitBlob } from "./build-blob.mjs";
 export { valuate } from "./valuate.mjs";
+export { valuateConsumables } from "./consumables.mjs";
 export { lookupItem } from "./item-lookup.mjs";
 export { assignItemSlugs, resolveItemId } from "./util.mjs";
 export { traderLevelsForPlayer, loyaltyForPlayerLevel, fleaUnlocked, canUseFlea } from "./progress.mjs";

@@ -10,6 +10,10 @@ declare module "@compute/index.mjs" {
     settings: Partial<Settings>,
     parts?: { crafts?: boolean; barters?: boolean; flips?: boolean },
   ): Valuated;
+  export function valuateConsumables(
+    blob: ProfitBlob,
+    settings?: Partial<Settings>,
+  ): ConsumablesValuated;
   export function buildProfitBlob(input: unknown): ProfitBlob;
   export function traderLevelsForPlayer(
     traders: ProfitBlob["meta"]["traders"],
@@ -225,5 +229,34 @@ declare module "@compute/index.mjs" {
     crafts: ValuatedRow[];
     barters: ValuatedRow[];
     flips: ValuatedRow[];
+  }
+
+  export interface ConsumableRow {
+    id: string;
+    consumableKind: "fuel" | "waterFilter" | "airFilter";
+    method: "flea" | "trader" | "barter";
+    methodLabel: string;
+    itemId: string;
+    itemName: string;
+    itemShortName: string;
+    iconLink?: string;
+    resourceUnits: number;
+    outputCount: number;
+    totalCost: number;
+    pricePerUnit: number;
+    costItems: CostLine[];
+    traderId?: string;
+    traderName?: string;
+    level: number;
+    taskUnlock?: string | null;
+    taskName?: string | null;
+    buyLimit?: number | null;
+    search: string;
+    cheapest?: boolean;
+  }
+
+  export interface ConsumablesValuated {
+    fuel: ConsumableRow[];
+    filters: ConsumableRow[];
   }
 }

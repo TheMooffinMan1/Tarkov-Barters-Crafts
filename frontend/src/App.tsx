@@ -4,6 +4,7 @@ import {
   DEFAULT_SETTINGS,
   GAME_MODES,
   valuate,
+  valuateConsumables,
   loyaltyForPlayerLevel,
   resolveItemId,
   type ProfitBlob,
@@ -18,6 +19,7 @@ import { blobNeedsRefresh, formatAbsoluteTime, formatRelativeAge, formatUpdated 
 import { ModeToggle } from "./components/ModeToggle";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { ProfitTable } from "./components/ProfitTable";
+import { ConsumablesTable } from "./components/ConsumablesTable";
 import { ItemLookup } from "./components/ItemLookup";
 import { HoverTip } from "./components/HoverTip";
 
@@ -288,12 +290,31 @@ export function App() {
     ).flips;
   }, [blob, settings, traderChip, traderLevelChip]);
 
+  const consumables = useMemo(() => {
+    if (!blob) return { fuel: [], filters: [] };
+    return valuateConsumables(blob, {
+      ...settings,
+      traderFilter: traderChip || undefined,
+      traderLevelFilter: traderLevelChip || undefined,
+    });
+  }, [
+    blob,
+    traderChip,
+    traderLevelChip,
+    settings.useFleaAvg,
+    settings.countToolsAsCost,
+    settings.filterToProgress,
+    settings.playerLevel,
+    settings.hiddenQuestIds,
+    settings.traderLevels,
+  ]);
+
   const crafts = useMemo(() => {
     if (!settings.bestTwoCraftsPerStation) return recipes.crafts;
     return topCraftsPerStation(recipes.crafts, 2);
   }, [recipes.crafts, settings.bestTwoCraftsPerStation]);
 
-  const valued = { crafts, barters: recipes.barters, flips };
+  const valued = { crafts, barters: recipes.barters, flips, consumables };
 
   const dataAge = blob ? formatUpdated(blob.lastUpdated, now) : null;
   const isItemsPage = isItemsPath(location.pathname);
@@ -328,7 +349,8 @@ export function App() {
           if (tab === "flips" && settings.flipDirection === "fleaToTrader") return sellTraderIds.has(trader.id);
           return (
             blob.barters.some((row) => row.traderId === trader.id) ||
-            blob.flips.some((row) => row.traderId === trader.id)
+            blob.flips.some((row) => row.traderId === trader.id) ||
+            tab === "consumables"
           );
         })
         .sort((a, b) => a.name.localeCompare(b.name))
@@ -435,6 +457,7 @@ export function App() {
                         ["crafts", `Crafts (${valued.crafts.length})`],
                         ["barters", `Barters (${valued.barters.length})`],
                         ["flips", `Flips (${valued.flips.length})`],
+                        ["consumables", "Fuel & filters"],
                       ] as const
                     ).map(([id, label]) => (
                       <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
@@ -510,7 +533,7 @@ export function App() {
                       </button>
                     ))}
                   </div>
-                ) : tab === "barters" || tab === "flips" ? (
+                ) : tab === "barters" || tab === "flips" || tab === "consumables" ? (
                   <div className="chips">
                     <button type="button" className={!traderChip ? "active" : ""} onClick={() => setTraderChip("")}>
                       All traders
@@ -571,6 +594,9 @@ export function App() {
                     hideUnprofitable={settings.hideUnprofitable}
                     onHideQuest={hideQuest}
                   />
+                ) : null}
+                {tab === "consumables" ? (
+                  <ConsumablesTable fuel={valued.consumables.fuel} filters={valued.consumables.filters} search={search} />
                 ) : null}
               </main>
             </div>

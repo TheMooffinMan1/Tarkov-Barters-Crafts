@@ -5,7 +5,7 @@ import {
   type Settings,
 } from "@compute/index.mjs";
 
-export type Tab = "crafts" | "barters" | "flips";
+export type Tab = "crafts" | "barters" | "flips" | "consumables";
 export type Page = "profit" | "items";
 
 export type UiState = {
