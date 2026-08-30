@@ -131,3 +131,33 @@ test("items get short-name slugs and a slug index", () => {
   assert.equal(out.items["item-bolt"].slug, "bolts");
   assert.equal(out.itemSlugs.bolts, "item-bolt");
 });
+
+test("item names fall back to normalizedName when items_en is missing", () => {
+  const m4Id = "5447a9cd4bdc2dbd208b4567";
+  const out = buildProfitBlob({
+    items: {
+      data: {
+        items: {
+          [m4Id]: {
+            id: m4Id,
+            name: `${m4Id} Name`,
+            shortName: `${m4Id} ShortName`,
+            normalizedName: "colt-m4a1-556x45-assault-rifle",
+            basePrice: 1,
+            types: [],
+          },
+        },
+      },
+    },
+    crafts: [],
+    barters: [],
+    traders: {},
+    hideout: {},
+    tasks: {},
+    itemLocale: {},
+  });
+  const item = out.items[m4Id];
+  assert.equal(item.name, "Colt M4a1 556x45 Assault Rifle");
+  assert.equal(item.shortName, item.name);
+  assert.match(item.search, /coltm4a1/);
+});

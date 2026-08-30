@@ -48,8 +48,11 @@ function slimItem(raw, locale = {}) {
   const id = raw.id;
   if (!id) return null;
   const types = Array.isArray(raw.types) ? raw.types : [];
-  const name = (locale[raw.name] ?? raw.name) || id;
-  const shortName = (locale[raw.shortName] ?? raw.shortName) || name;
+  const name = (raw.name && locale[raw.name]) || titleCaseNormalized(raw.normalizedName) || raw.name || id;
+  const shortName =
+    (raw.shortName && locale[raw.shortName]) ||
+    (raw.shortName && raw.shortName !== `${id} ShortName` ? raw.shortName : null) ||
+    name;
   const props = raw.properties || {};
   const units = Number(props.units ?? props.maxResource) || 0;
   const kind = consumableKind(id);
